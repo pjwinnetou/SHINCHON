@@ -1,0 +1,150 @@
+About SONIC
+-=-=-=-=-=-=-=-=-=-=-=-=-
+This is the SONIC software package for relativistic nucleus--nucleus collisions. 
+SONIC comprises UVH2+1 (a hydrodynamic solver) and B3D (a hadronic cascade). 
+It always runs all three parts of the package. 
+For running just a single code, refer to the individual repos.
+
+Installation
+-=-=-=-=-=-=-=-=-=-=-=-=-
+This repo only contains scripts, not the hydro or b3d sources. 
+However, this repo contains the script "deploy_sonic", which will download and install 
+UVH2+1 and b3d from their respective sources.
+
+This requires access to these two Git repositories on bitbucket.org:
+     - mhabich/b3d_sonic
+     - mluzum/uvh2-1
+
+If no SSH key is used in conjunction with bitbucket.org, then alter the line 'USESSHKEY' in 'deploy_sonic.sh' to 'false'.
+If these conditions are met, then execute
+
+	./deploy_sonic.sh
+
+to download the necessary files and establish the folder structure. 
+
+On the folder structure
+-=-=-=-=-=-=-=-=-=-=-=-=-
+The main directory of SONIC is called 'ROOTDIR'.
+The directory 'ROOTDIR' contains the folders
+
+     b3d (sources)
+     results
+     scripts (sources)
+     template
+     tmp (working)
+     uvh2-1 (sources)
+
+and the files
+
+    link_folders.sh
+    multi_run.sh
+    single_run.sh
+
+
+Single SONIC run
+-=-=-=-=-=-=-=-=-=-=-=-=-
+1. Parameters
+   Change the parameter files in 'template/data/params.txt' and 'template/input/transport_params.dat'
+
+2. Run the code
+
+   ./single_run.sh RUNFOLDER
+
+This creates a copy of template in 'RUNFOLDER' and submits SONIC to Torque.
+
+3. Logfiles are all in 'RUNFOLDER/logdir'
+   
+4. Results are in 'RUNFOLDER/data/' and 'RUNFOLDER/results_analysis/'
+
+
+Multiple SONIC runs
+-=-=-=-=-=-=-=-=-=-=-=-=-
+These routines were designed for the Eridanus Cluster. 
+1. Initial conditions
+   One needs a folder with initial conditions and parameter files. 
+   1.1 The inital conditions should be NxN matrices of initial energy density values. The names of these can be changed in 'multi_run.sh'. 
+   1.2 The parameter files 'master.params' and 'master.trans' which have the same format as 'template/data/params.txt' and 'template/input/transport_params.dat'. In 'master.params', NUMT=N for a rank N energy density matrix and 'AT' needs to be changed accordingly. The parameter files need to be in 'ROOTDIR'
+
+   To create a symbolic link for a set of centrality classes 'CENTRALITIES_FOLDER' in 'ROOTDIR' with the parameter files present, one can execute
+
+   ./link_folders.sh CENTRALITIES_FOLDER NEWSUFFIX
+
+   This creates multiple symbolic links with the names 'NEWSUFFIX-xx--yy' with 'xx--yy' specifying the particular centrality class and copies the parameter files into the corresponding directories of the symbolic link. 
+
+2. Run
+   
+   ./multi_run.sh INITED_FOLDER
+   
+   to submit the folder 'INITED_FOLDER' to Torque.
+
+3. Logfiles
+   The file 'submission.log' records the submitted jobs and the failed UVH2+1 jobs.
+   Each individual job has there own set of logfiles. 
+   If the job is actively running, the logfiles are in 'tmp/' or 'tmp/INITED_FOLDER_xyz/logdir/'. 
+   If the job has finished, all the logfiles are in 'results/INITED_FOLDER/data_xyz/logdir'.
+   If the job has failed, the logfiles are in 'tmp/'.
+4. Results go to 'results/INITED_FOLDER/data_xyz/'
+5. Averaging procedure
+   There are 5 averaging scripts.
+   	 avg_vn_fluc.sh, avg_vn_q.sh, avg_hbt.sh, avg_all.sh, all_avg_all.sh
+5.1 avg_vn_fluc.sh, avg_vn_q.sh, avg_hbt.sh
+    These act on a single centrality class. Details are in the respective routines.
+    Syntax:
+
+	./avg_vn_fluc.sh auau-40--50 pion
+	./avg_vn_q.sh auau-40--50 pion 4th
+	./avg_hbt.sh auau-40--50
+   
+5.2 avg_all.sh 
+    This averages all species and correlation functions. Details are in the script.
+    Syntax:
+	
+	./avg_all.sh auau-40--50
+
+5.3 all_avg_all.sh
+    This acts on ALL centrality classes of a given system. Details are in the script.
+    Syntax:
+	
+	./avg_all.sh auau-
+    
+    Note that this assumes folder of the structure "PREFIXxx-yy", i.e., one only removes the suffix containing the centrality class information for the command line argument.
+6. Integrated quantities
+   There are 2 integration scripts. The averaging procedure needs to be completed before executing these.
+   	 all_int_qu.sh, int_qu.sh
+
+6.1 int_qu.sh
+    This acts on a single centrality class. Details are in the script.
+    Syntax:
+
+	./int_qu.sh auau- 40--50 3
+
+    Note that the PREFIX and the CENTRALITY is now split! 
+    Species:
+    0	gamma
+    1	kaon
+    2	pion
+    3	ppbar
+    4	unid
+
+6.2 all_int_qu.sh
+    This acts on ALL centrality classes and integrates the correlation functions for all species. Details are in the script.
+    Syntax:
+
+    	 ./all_int_qu.sh auau-	 
+
+    Note that this assumes folder of the structure "PREFIXxx-yy", i.e., one only removes the suffix containing the centrality class information for the command line argument.
+
+Local run
+-=-=-=-=-=-=-=-=-=-=-=-=-
+If SONIC is to be run on a local machine, then copy the script "local run" from ROOTDIR/scripts/local_run.sh to ROOTDIR and execute it via
+   ./local_run.sh OUTPUT
+
+
+Other clusters
+-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+For other clusters, one needs to modify the following files:
+template/multi_vh2.pbs
+template/multi_b3d.pbs
+template/multi_b3d-analyze.pbs

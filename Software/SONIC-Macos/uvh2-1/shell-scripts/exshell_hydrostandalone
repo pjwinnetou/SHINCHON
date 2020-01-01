@@ -1,0 +1,13 @@
+echo "Non-Central Viscous Hydro"
+echo "Starting Calculation Part 0: Initial Conditions"
+nohup ./initE > initE.log
+echo "Starting Calculation Part 1: Hydro Solver"
+nohup nice -n10 ./vh2-0.5.2 > vh2-0.5.2.log
+echo "Starting Calculation Part 2: Cooper-Frye"
+nohup nice -n10 ./convertfull > convertfull.log
+echo "Starting Calculation Part 3: Resonance-Decays"
+nohup nice -n10 ./reso > reso.log
+echo "Starting Calculation Part 4: Spectra and Elliptic Flow"
+nohup ./extractfull > extractfull.log
+exit
+echo "Success!"

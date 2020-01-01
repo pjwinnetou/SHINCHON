@@ -1,0 +1,57 @@
+#!/bin/bash
+############################################################
+## 'man qsub' for additional information.
+############################################################
+
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=24:00:00
+#PBS -r n
+### Logfiles are stored outside the SONIC working directory
+### Otherwise, Torque creates an empty directory when deleting the working directory
+#PBS -o ../$PBS_JOBNAME.log
+#PBS -e ../$PBS_JOBNAME.err 
+
+export NPROCS=`wc -l $PBS_NODEFILE |gawk '//{print $1}'`
+
+tinit=$(date +%s)
+
+### The following statements dump some diagnostic information to 
+### the batch job's standard output.
+echo The master node of this job is `hostname`
+echo The working directory is `echo $PBS_O_WORKDIR`
+echo The node file is $PBS_NODEFILE
+echo "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+echo This job runs on the following nodes:
+echo `cat $PBS_NODEFILE`
+echo "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+echo This job has allocated $NPROCS nodes
+echo "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+
+### Change to the working directory of the qsub command. 
+cd $PBS_O_WORKDIR
+
+### Sets the number of OpenMP threads to the number of requested processors 
+export OMP_NUM_THREADS=$PBS_NUM_PPN 
+
+### the full pathname as is done here.
+./b3d default > $LOGDIR/b3d.log
+./analyze default > $LOGDIR/analyze.log
+
+runtime=$(($(date +%s)-$tinit))
+echo Runtime: ca. $(($runtime/60)) min
+
+### Creating results directory
+### DELETES working directory after SUCCESFULLLY copying results
+echo "SONIC is done."
+echo "Copying results to $RESULTDIR"
+cp -r data $RESULTDIR/data.$NUM && \
+cp analysis/default/cent0to5/details/*.dat $RESULTDIR/data.$NUM/ && \
+cp -r $LOGDIR $RESULTDIR/data.$NUM/ && \
+mv ../$PBS_JOBNAME.* $RESULTDIR/data.$NUM/$LOGDIR && \
+sleep 2
+if [[ $? -eq 0 ]]
+then
+    rm -r $PBS_O_WORKDIR
+else
+    echo "Copying results failed!"
+fi
