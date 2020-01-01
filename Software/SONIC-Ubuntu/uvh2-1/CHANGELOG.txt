@@ -1,0 +1,87 @@
+New in version 2.1
+Merged with Matthew Luzum's files for Gubser flow and Neumann b.c., added routines to extract critical bulk viscosity 'bulkvisc.cpp'.
+
+New in version 2.0
+new routine "generate" to generate transport coefficient files (e.g. etaos-dyn.dat)
+
+New in version 1.9
+Bug-fix in bulk-viscosity implementation (main doInc routine)
+
+New in version 1.8 (1.8.3)
+Improved smoothing routine, should run lumpy initial conditions if box is large enough (including pre-equilibrium flow); new routine 'calcS' to determine guess for final multiplicity from initial 'inited.dat' file; new params.txt entry 'SCAL' to rescale inited.dat file within vh2
+
+New in version 1.7
+Option for pre-equilibrium flow (1307.2539).
+
+New in version 1.5
+Bulk viscosity
+
+New in version 1.4
+Temperature dependent viscosities and other transport coefficients. These are now specified in tabulated form in input files such as etaoverS.dat, beta2.dat, lambda1.dat
+
+New in version 1.3
+Bug-fix in convertfull.cpp; Changed value of fm to GeV^-1 conversion (was inaccurate).
+
+New in version 1.2
+Precompiler option #SMOOTHING in UVH2+1.cpp allows for running lumpy initial conditions
+
+New in version 1.1
+Custom output files for Betz/Gyulassy (precompiler option #BG) and Adare-McCumber-Nagle-Romatschke (precompiler option #AMNR)
+
+
+New in version 1.0
+
+* Matching to a hadron cascaded code (b3d courtesy MADAI collaboration and Scott Pratt)
+* Matchign to pre-equilibrium code (courtesy Wilke van der Schee)
+We believe that this fully integrated package deserves version number 1.0
+* Known bugs: kln not properly supported. Needs updating from version 0.2
+
+New in version 0.5 
+* Fixed a bug concerning the shear-selfcoupling (lambda_1 was incorrectly implemented)
+* General EoS files (controlled via params.txt file)
+* Changed definition of snapVcontour and snapTcontour to output velocity and temperature profiles for easy use in applications where hydro background is needed
+* initE now generates (and vh2 now takes) tabulated initial conditions for energy density, fluid velocity and shear tensor as well as hydro starting time. This should facilitate matching some pre-equilibrium tmunu to this hydro solver
+* enables multi-threading via MPI
+* old hydro-to-particle routines (convert, extract, reso) have been discontinued
+* partical chemical equilibrium (NOT TESTED)
+
+New in version 0.4:
+* Introduced freezeout routines (convertfull, preresofull, resofull, 
+extractfull) which integrate over the entire transverse plane,
+appropriate for arbitrary asymmetric initial conditions. 
+* Added option for deformed (but still smooth) initial conditions
+to study arbitrary v_n (see FREEZE = -6,-7 or -27 in source and 
+arXiv:1007.5469 for explanation)
+to compile properly
+
+
+New in version 0.3:
+* New (optional) blockwise freeze out routine that does not require
+monotonically decreasing temperature from the center.
+* prereso.cpp to extract spectra before resonance feed down
+* ability to choose different forms for the viscous correction
+to the freeze out distribution function besides the standard
+form quadratic in momentum (see FREEZE parameter in data/params.txt)
+* convertfull routine that calculates spectra over all azimuthal
+angles, rather than just one quadrant, for unsymmetric initial
+conditions 
+
+
+
+New in v0.2:
+
+* Bug fixed in calculation of resonances (convert.cpp module)
+* Allows for non-vanishing lambda_{1,2} coefficients in the hydro equations
+* Allows use of both CGC and Glauber initial conditions (kln module)
+* Initial conditions for both RHIC and LHC implemented (initE.cpp module)
+* Allows to shut off freeze-out surface finder (isochronous freezeout, see params.txt)
+
+June 21, 2009 (still v0.2):
+*changed qcdIEOS.dat file so that values are monotonous
+*updated README to give more explanation on physical units
+....thanks to Rajeev Bhalerao for pointing out these problems....
+
+July 8, 2009 (still v0.2):
+* introduced LCOEF2 in convertnew.cpp so that it would compile
+* fixed bug in UVH2+1.cpp and initE.cpp about low-temperature EOS cutoff
+  (lowestE); should run now for higher cutoff temperatures EOS than before
