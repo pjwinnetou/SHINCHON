@@ -1,0 +1,32 @@
+File created on Thu Jan  2 15:48:47 2020
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+Used parameters by IP-Glasma v1.3
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+ 
+ Output by readInput in main.cpp: 
+ 
+Program run in mode 1
+Nc 3
+size 256
+lattice spacing a 0.078125 fm 
+Ny 50
+Projectile Au
+Target Au
+Gaussian wounding 1
+Using fluctuating x=Qs/root(s) 0
+Using local Qs to run 0
+QsmuRatio 0.7
+smeared mu 0
+m 0.1
+rmax 100000
+UVdamp 0
+Using fat tailed distribution 0
+Random seed used on rank 0: 10
+ 
+ Output by setColorChargeDensity in Init.cpp: 
+ 
+b = 1.55085 fm
+Npart = 367
+Ncoll = 1114
+using fixed coupling alpha_s=0.0795775
