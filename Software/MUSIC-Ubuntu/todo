@@ -1,0 +1,15 @@
+- Replace calls to random.cpp functions by GSL calls, and delete random.cpp (done -- to be tested)
+- Fix Cooper-Frye: make sure particle are only copied if their mass is close to the mass of the last computed particle 
+- Replace system() calls C++ commands (Matt branches)
+- The quantity that is outputted is the maximum memory used over the lifetime of the program. Is that what we want?
+- "Include_deltaf" sounds like it controls all delta f, but is really for shear viscosity. If we change the parameter, we break reverse-compatibility. If we don't, it confusing. What do we do?
+- Documentation makes reference to non-existing files? "example_inputs files for mode 13 and 14". Recheck documentation
+- Provide clearer documentation for test folder?
+- Have to add parentheses in the print commands in "generate_music_inputfile.py" on lines 395, 400, 460 in order for it to work?
+-  When running using "music_input_Gubser" and "music_input_Gubser_ideal", the following statements were printed, respectively, once the process had completed: 
+cat: surface0.dat: No such file or directory
+rm: surface0.dat: No such file or directory
+- After running "music_input_Gubser_ideal" and "make_plots_ideal.py", it says "[False False False ..., False False False]" but still produces plots.
+- After completion of  "tests/test_Glauber/music_input_mode_3" the statement "rm: yptphiSpectra-1.dat: No such file or directory" appears. 
+- After completion of  "examples_inputs/2D/music_input_mode_3" the statement "rm: yptphiSpectra-1.dat: No such file or directory" appears.
+
