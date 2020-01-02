@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+#PBS -N utilities
+#PBS -l walltime=12:00:00
+#PBS -l nodes=1:ppn=16
+#PBS -S /bin/bash
+#PBS -e test.err
+#PBS -o test.log
+#PBS -A cqn-654-ad
+#PBS -q sw
+#PBS -d /gpfs/mnt/gpfs02/phenix/hhj/hhj1/shlim/work/98.mc_study/03.MUSIC/source/music-hydro-code-00/utilities
+
+module add ifort_icc/14.0.4
+
+results_folder=results
+spectra_folder=particle_spectra
+
+# hydro evolution
+mpirun -np 16 ./mpihydro music_input_2 1>mode_2.log 2>mode_2.err
+./sweeper.sh $results_folder
+# multiple Cooper-Frye in sequence ... 
+cp results/surface_eps_0.1.dat ./surface.dat
+mpirun -np 16 ./mpihydro music_input_3 1>mode_3.log 2>mode_3.err
+rm -fr yptphiSpectra?.dat yptphiSpectra??.dat
+thermal_folder=spvn_eps_0.1
+mkdir $thermal_folder
+mv particleInformation.dat $thermal_folder
+mv yptphiSpectra.dat $thermal_folder
+cp mpihydro $thermal_folder
+cp music_input_4 $thermal_folder
+cp music_input_13 $thermal_folder
+cp music_input_14 $thermal_folder
+cp known_nuclei.dat $thermal_folder
+cp -r EOS $thermal_folder
+./generate_resonance_decay_job.py $thermal_folder
+cd $thermal_folder
+qsub -A cqn-654-ad submit_resonance_job.pbs
+cd ..
