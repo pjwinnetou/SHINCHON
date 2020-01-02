@@ -57,7 +57,7 @@ bmax 11.0                                  # maximum value of impact parameter
 #######################################
 # parameters for hydrodynamic evolution
 #######################################
-boost_invariant  0            # whether the simulation is boost-invariant 
+boost_invariant  1            # whether the simulation is boost-invariant 
 # grid information
 Initial_time_tau_0 0.4        # starting time of the hydrodynamic 
                               # evolution (fm/c)
@@ -132,7 +132,7 @@ epsilon_freeze 0.18             # the freeze out energy density (GeV/fm^3)
 use_eps_for_freeze_out 1        # flag to use energy density as criteria to 
                                 # find freeze-out surface 
                                 # 0: use temperature, 1: use energy density
-T_freeze 0.135                  # freeze-out temperature (GeV)
+T_freeze 0.170                  # freeze-out temperature (GeV)
 
 number_of_particles_to_include 40   # number of thermal particles to compute 
                                     # for particle spectra and vn
