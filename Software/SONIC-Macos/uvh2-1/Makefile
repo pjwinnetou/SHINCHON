@@ -5,7 +5,7 @@ OPTIMIZATION = -O3
 FLOWTRACE =
 PARALL = -fopenmp
 CFLAGS = $(DEBUG) $(OPTIMIZATION) $(FLOWTRACE) $(PARALL)
-COMPILER = g++-9 
+COMPILER = g++-6
 LIBS = -L/usr/local/lib -lm -lgsl -lgslcblas 
 INCLUDES = -I. -I/usr/local/include 
 
