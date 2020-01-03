@@ -41,9 +41,6 @@ cp -r $B3DDIR/install/progdata/madai/resinfo $TEMPLATEDIR/progdata/resinfo
 
 cd $TEMPLATEDIR
 
-ln -s vh2* vh2
-ln -s analysis/default/cent0to5/details results_analysis
-
 cd ../
 
 ### Creates other folders for batchsubmission
