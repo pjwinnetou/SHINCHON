@@ -1,0 +1,56 @@
+================================================================
+|           ____                                               |
+|         ,'  , `.               .--.--.      ,---,  ,----..   |
+|      ,-+-,.' _ |         ,--, /  /    '. ,`--.' | /   /   \  |
+|   ,-+-. ;   , ||       ,'_ /||  :  /`. / |   :  :|   :     : |
+|  ,--.'|'   |  ;|  .--. |  | :;  |  |--`  :   |  '.   |  ;. / |
+| |   |  ,', |  ':,'_ /| :  . ||  :  ;_    |   :  |.   ; /--`  |
+| |   | /  | |  |||  ' | |  . . \  \    `. '   '  ;;   | ;     |
+| '   | :  | :  |,|  | ' |  | |  `----.   \|   |  ||   : |     |
+| ;   . |  ; |--' :  | | :  ' ;  __ \  \  |'   :  ;.   | '___  |
+| |   : |  | ,    |  ; ' |  | ' /  /`--'  /|   |  ''   ; : .'| |
+| |   : '  |/     :  | : ;  ; |'--'.     / '   :  |'   | '/  : |
+| ;   | |`-'      '  :  `--'   \ `--'---'  ;   |.' |   :    /  |
+| |   ;/          :  ,      .-./           '---'    \   \ .'   |
+| '---'            `--`----'                         `---`     |
+================================================================
+MUSIC - a 3+1D viscous relativistic hydrodynamic code for heavy ion collisions
+Copyright (C) 2017  Gabriel Denicol, Charles Gale, Sangyong Jeon, Matthew Luzum, Jean-François Paquet, Björn Schenke, Chun Shen
+[1m[33m[Warning] T_freeze set but overridden -- freezing out by energy density at 0.18 GeV/fm^3[0m
+[Info] 0.002483 MB DeltaX = 0.1 fm
+[Info] 0.002483 MB DeltaY = 0.1 fm
+[Info] 0.002483 MB DeltaETA = 0.2
+[Info] 0.002483 MB DeltaTau = 0.02 fm
+[Info] 0.002483 MB read_in_parameters: Time step size = 0.02
+[Info] 0.002483 MB read_in_parameters: Number of time steps required = 1500
+[Info] 0.002483 MB Done read_in_parameters.
+[Info] 0.002483 MB Checking input parameter list ... 
+[Info] 0.002483 MB Finished checking input parameter list. Everything looks reasonable so far (*•̀ᴗ•́*)و ̑̑
+[Info] 0.002483 MB Initialize MPI ... 
+[Info] 0.006508 MB This is processor 1/1: READY.
+[Info] 0.006683 MB Using lattice EOS from Huovinen/Petreczky s95p-v1.2(for UrQMD)
+[Info] 0.006683 MB reading EOS s95p-v1.2 (for UrQMD) ...
+[Info] 0.006683 MB from path ./EOS/s95p-v1.2
+[Info] 0.007244 MB Done reading EOS.
+[Info] 0.007244 MB size=1, rank=0
+[Info] 0.007244 MB init Glauber
+[Info] 0.007244 MB Nucleus Name:  Nucleus.A = 197 Nucleus.Z = 79
+[Info] 0.007244 MB  Nucleus.w_WS = 0
+ Nucleus.a_WS = 0.505
+ Nucleus.R_WS = 6.38
+
+[Info] 0.007244 MB Nucleus Name:  Nucleus.A = 1 Nucleus.Z = 1
+[Info] 0.007244 MB  Nucleus.w_WS = 0
+ Nucleus.a_WS = 1
+ Nucleus.R_WS = 1
+
+[Info] 0.007244 MB initArena
+[Info] 0.7467 MB Grid allocated.
+[Info] 0.7467 MB rk_order=2
+[Info] 0.7467 MB random seed=1.54733e+09 + 0 = 1.54733e+09
+[Info] 0.7467 MB rank 0: Using impact parameter b=1.24203
+[Info] 0.7467 MB number of binary collisions = 0
+[Info] 0.7467 MB  N_part = 0
+[Info] 7.638 MB initial distribution done.
+[Info] 7.638 MB rank 0 ok.
+[Info] 7.64 MB Starting Evolve on rank 0
