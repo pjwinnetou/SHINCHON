@@ -78,7 +78,7 @@ void diffusion(
   //TH2D* quarkxy= static_cast <TH2D*> (fin2->Get(inNcollDistName.c_str()));
   //
   // for root 5 use this instead:
-  TH2D* quarkxy = (TH2D*)inFile->Get("ED_0");
+  TH2D* quarkxy = (TH2D*)inFile->Get("T_0");
   if (! quarkxy) cout << "Did not find quark x,y distribution TH2D" << endl;
 
   TH1D* htime = (TH1D*)inFile->Get("Time");
@@ -182,7 +182,7 @@ void diffusion(
 		cout << Form("Reading hydro inputs for timestep %d/%d", itime, N_timesteps) << endl;
     
     // check if this information exists in hydro file or not
-    if (! inFile->Get(Form("ED_%d",    itime))) {
+    if (! inFile->Get(Form("T_%d",    itime))) {
 			N_timesteps = itime - 1;
       cout << "Last hydro timestep = " << N_timesteps << endl;
       break;
