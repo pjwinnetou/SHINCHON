@@ -1,0 +1,3 @@
+set( analyze_INCLUDE_DIRS @analyze_INCLUDE_DIRS@ )
+set( analyze_LIBRARY_DIRS @analyze_LIBRARY_DIRS@ )
+set( analyze_LIBRARIES @analyze_LIBRARIES@ )
