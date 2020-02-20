@@ -1,0 +1,136 @@
+#!/bin/bash
+species=$1
+echo "Average all: usage ./averageall [run]; e.g ./averageall runAT2"
+echo "Trying to average for $species"
+dir=$(printf 'output/%s/cent0to5/Tabhist*' $species)
+filenum=0
+declare -A ptarr;
+declare -A v1arr;
+declare -A v2arr;
+declare -A v3arr;
+declare -A v4arr;
+declare -A v5arr;
+declare -A v6arr;
+
+maxa=-1 #max line counter
+
+for file in $dir
+do
+#file="results/pion_vn_fluc1.dat"
+  echo "Processing $file"
+  a=-1  #line-counter  
+  while read line
+  do
+    #echo "Reading line $a"
+    b=0  #array type counter
+    if [ "$a" -gt "-1" ]; then  #if it's not line -1, start filling in
+#      echo "filenumber = $filenum, line number $a"
+      if [ "$filenum" = "0" ]; then
+        for mydummy in $line
+        do
+#	  ent=$mydummy  
+	    ent=$(printf '%.10f' $mydummy)
+#          echo "part number $b : $ent"
+          if [ "$b" = "0" ]; then
+            ptarr[$a]=$ent
+          fi
+	  if [ "$b" = "1" ]; then
+            v1arr[$a]=$ent
+          fi
+          if [ "$b" = "2" ]; then
+            v2arr[$a]=$ent
+          fi
+          if [ "$b" = "3" ]; then
+            v3arr[$a]=$ent
+          fi
+	  if [ "$b" = "4" ]; then
+            v4arr[$a]=$ent
+          fi
+	  if [ "$b" = "5" ]; then
+            v5arr[$a]=$ent
+          fi
+	  if [ "$b" = "6" ]; then
+            v6arr[$a]=$ent
+          fi
+#          echo "here it is $ent"
+          let b=b+1
+        done
+      else 
+        #echo "filenumber = $filenum, line number $a"
+	if [ "$a" -lt "$maxa" ]; then
+        for mydummy in $line
+        do       
+	    ent=$(printf '%.10f' $mydummy)
+	  if [ "$b" = "1" ]; then	    
+	    v1arr[$a]=$(echo "${v1arr[$a]}+$ent" | bc -l)
+          fi
+          if [ "$b" = "2" ]; then
+#	      if [ "$a" = "7" ]; then 
+#		  echo "have ${v2arr[$a]} add $ent at ${ptarr[$a]}"
+#              fi
+            v2arr[$a]=$(echo "${v2arr[$a]}+$ent" | bc -l)
+          fi
+          if [ "$b" = "3" ]; then
+            v3arr[$a]=$(echo "${v3arr[$a]}+$ent" | bc -l)
+          fi
+	  if [ "$b" = "4" ]; then
+            v4arr[$a]=$(echo "${v4arr[$a]}+$ent" | bc -l)
+          fi
+	  if [ "$b" = "5" ]; then
+            v5arr[$a]=$(echo "${v5arr[$a]}+$ent" | bc -l)
+          fi
+	  if [ "$b" = "6" ]; then
+            v6arr[$a]=$(echo "${v6arr[$a]}+$ent" | bc -l)
+          fi
+#          echo "here it is $ent"
+          let b=b+1
+        done
+        fi
+      fi
+    fi
+  let a=a+1
+  if [ "$filenum" = "0" ]; then
+    let maxa=maxa+1
+  fi
+  done<$file
+  let filenum=filenum+1
+done
+
+
+outname=$(printf 'output/%s/cent0to5/av_Tabhist.dat' $species)
+echo "attempting to write $a lines for $filenum files to $outname"
+#
+
+sum0=0
+sumpt=0
+sum1=0
+sum2=0
+sum3=0
+sum4=0
+sum5=0
+
+for ((c=0;c<$maxa;c++))
+do
+  #echo "have ${ptarr[$c]} and ${v1arr[$c]}"
+  dummy=$(echo "${v1arr[$c]}/$filenum" | bc -l)
+  v1arr[$c]=$dummy
+  dummy=$(echo "${v2arr[$c]}/$filenum" | bc -l)
+  v2arr[$c]=$dummy
+  dummy=$(echo "${v3arr[$c]}/$filenum" | bc -l)
+  v3arr[$c]=$dummy
+  dummy=$(echo "${v4arr[$c]}/$filenum" | bc -l)
+  v4arr[$c]=$dummy
+  dummy=$(echo "${v5arr[$c]}/$filenum" | bc -l)
+  v5arr[$c]=$dummy
+  dummy=$(echo "${v6arr[$c]}/$filenum" | bc -l)
+  v6arr[$c]=$dummy
+  if [ "0" = "$c" ]; then
+    echo "#  tau [fm]           N                       eps                       P                       V3                        V4                     V5" > $outname
+ #   echo "${ptarr[$c]}  ${v1arr[$c]}  ${v2arr[$c]}   ${v3arr[$c]}" >> $outname
+    echo "${ptarr[$c]}  ${v1arr[$c]}  ${v2arr[$c]}   ${v3arr[$c]}  ${v4arr[$c]}   ${v5arr[$c]}   ${v6arr[$c]}" >> $outname
+  else
+      echo "${ptarr[$c]}  ${v1arr[$c]}  ${v2arr[$c]}   ${v3arr[$c]}  ${v4arr[$c]}   ${v5arr[$c]}   ${v6arr[$c]}" >> $outname
+      #echo "${ptarr[$c]}  ${v1arr[$c]}  ${v2arr[$c]}   ${v3arr[$c]}" >> $outname
+  fi
+done
+

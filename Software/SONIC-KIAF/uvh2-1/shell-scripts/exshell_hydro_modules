@@ -1,0 +1,14 @@
+echo "Hydro Modules Run"
+echo "looking for initialization *.dat files in data/"
+echo "Non-Central Viscous Hydro"
+echo "Starting Calculation Part 1: Hydro Solver"
+nohup nice -n10 ./vh2-0.5.4 > vh2-0.5.4.log
+echo "Copying freezeout.dat"
+cp data/freezeout.dat output/default/cent0to5/
+echo "Starting Calculation Part 2: Hadron Cascade"
+nohup nice -n10 ./b3d default > b3d.log
+echo "Starting Calculation Part 3: Spectra"
+nohup ./analyze default > analyze.log
+cp analysis/default/cent0to5/details/*.dat data/results/
+exit
+echo "Success!"
