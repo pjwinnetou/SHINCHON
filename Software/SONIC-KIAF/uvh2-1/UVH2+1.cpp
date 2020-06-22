@@ -632,19 +632,20 @@ void smeare(double **pe)
 				pe[sx][sy] = (pe[sx_up][sy_up]+pe[sx_up][sy]+pe[sx_up][sy_dn]+pe[sx][sy_up]+pe[sx][sy]+pe[sx][sy_dn]+pe[sx_dn][sy_up]+pe[sx_dn][sy]+pe[sx_dn][sy_dn])/9.0;
 				*/
 				double tmp_e = 0.0, tmp_norm = 0.0;
-				for (int ii=0; ii<3; ii++){
-					for (int jj=0; jj<3; jj++){
-						int sxx = sx - 1 + ii;
-						int syy = sy - 1 + jj;
+				for (int ii=0; ii<5; ii++){
+					for (int jj=0; jj<5; jj++){
+						int sxx = sx - 2 + ii;
+						int syy = sy - 2 + jj;
 
 						if (sxx>NUMT || sxx<1) continue;
+						if (syy>NUMT || syy<1) continue;
 
-						tmp_e += pe[sx][sy];
+						tmp_e += pe[sxx][syy];
 						tmp_norm += 1.0;
 					}//ii
 				}//jj
 
-				pe[sx][sy] = tmp_e / tmp_norm;
+				pe[sx][sy] = tmp_e/tmp_norm;
 
 			}
 		}
@@ -672,15 +673,16 @@ void smearu(double ***pu, double **pe)
 				*/
 
 				double tmp_u0 = 0.0, tmp_u1 = 0.0, tmp_norm = 0.0;
-				for (int ii=0; ii<3; ii++){
-					for (int jj=0; jj<3; jj++){
-						int sxx = sx - 1 + ii;
-						int syy = sy - 1 + jj;
+				for (int ii=0; ii<5; ii++){
+					for (int jj=0; jj<5; jj++){
+						int sxx = sx - 2 + ii;
+						int syy = sy - 2 + jj;
 
 						if (sxx>NUMT || sxx<1) continue;
+						if (syy>NUMT || syy<1) continue;
 
-						tmp_u0 += pu[0][sx][sy];
-						tmp_u1 += pu[1][sx][sy];
+						tmp_u0 += pu[0][sxx][syy];
+						tmp_u1 += pu[1][sxx][syy];
 						tmp_norm += 1.0;
 					}//ii
 				}//jj
@@ -1354,6 +1356,7 @@ void setInitialConditions()
       
       if (SMOOTHING)
 	for (int a=0;a<10;a++)
+	//for (int a=0;a<20;a++)
 	smearu(u,e);
     }
 }
