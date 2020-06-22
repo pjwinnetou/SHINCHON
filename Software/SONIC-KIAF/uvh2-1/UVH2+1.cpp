@@ -613,46 +613,82 @@ void smeare(double **pe)
       //double SMOOTH = 0.001;  
       // turn smooth on and off via the params file. -MPM
 
-  for (int sx=1;sx<=NUMT;sx++)
-    for (int sy=1;sy<=NUMT;sy++)
-      {
-	if(pe[sx][sy]/pow(AT,4)<SMOOTH)
-	  {
-	    int sx_up = sx+1;
-	    int sx_dn = sx-1;
-	    int sy_up = sy+1;
-	    int sy_dn = sy-1;
-	    
-	    if (sx_up > NUMT) sx_up = NUMT;
-	    if (sx_dn < 1)   sx_dn = 1;
-	    if (sy_up > NUMT) sy_up = NUMT;
-	    if (sy_dn < 1)   sy_dn = 1;
-	    
-	    pe[sx][sy] = (pe[sx_up][sy_up]+pe[sx_up][sy]+pe[sx_up][sy_dn]+pe[sx][sy_up]+pe[sx][sy]+pe[sx][sy_dn]+pe[sx_dn][sy_up]+pe[sx_dn][sy]+pe[sx_dn][sy_dn])/9.0;
-	  }
-      }
+	for (int sx=1;sx<=NUMT;sx++)
+		for (int sy=1;sy<=NUMT;sy++)
+		{
+			if(pe[sx][sy]/pow(AT,4)<SMOOTH)
+			{
+				/*
+				int sx_up = sx+1;
+				int sx_dn = sx-1;
+				int sy_up = sy+1;
+				int sy_dn = sy-1;
+
+				if (sx_up > NUMT) sx_up = NUMT;
+				if (sx_dn < 1)   sx_dn = 1;
+				if (sy_up > NUMT) sy_up = NUMT;
+				if (sy_dn < 1)   sy_dn = 1;
+
+				pe[sx][sy] = (pe[sx_up][sy_up]+pe[sx_up][sy]+pe[sx_up][sy_dn]+pe[sx][sy_up]+pe[sx][sy]+pe[sx][sy_dn]+pe[sx_dn][sy_up]+pe[sx_dn][sy]+pe[sx_dn][sy_dn])/9.0;
+				*/
+				double tmp_e = 0.0, tmp_norm = 0.0;
+				for (int ii=0; ii<3; ii++){
+					for (int jj=0; jj<3; jj++){
+						int sxx = sx - 1 + ii;
+						int syy = sy - 1 + jj;
+
+						if (sxx>NUMT || sxx<1) continue;
+
+						tmp_e += pe[sx][sy];
+						tmp_norm += 1.0;
+					}//ii
+				}//jj
+
+				pe[sx][sy] = tmp_e / tmp_norm;
+
+			}
+		}
 }
 
 void smearu(double ***pu, double **pe)
 {
-  for (int sx=1;sx<=NUMT;sx++)
-    for (int sy=1;sy<=NUMT;sy++)
-      {
-	if(pe[sx][sy]/pow(AT,4)<SMOOTH)
-	  {
-	    int sx_up = sx+1;
-	    int sx_dn = sx-1;
-	    int sy_up = sy+1;
-	    int sy_dn = sy-1;
-	    if (sx_up > NUMT) sx_up = NUMT;
-	    if (sx_dn < 1)   sx_dn = 1;
-	    if (sy_up > NUMT) sy_up = NUMT;
-	    if (sy_dn < 1)   sy_dn = 1;
-	    
-	    pu[0][sx][sy] = (pu[0][sx_up][sy_up]+pu[0][sx_up][sy]+pu[0][sx_up][sy_dn]+pu[0][sx][sy_up]+pu[0][sx][sy]+pu[0][sx][sy_dn]+pu[0][sx_dn][sy_up]+pu[0][sx_dn][sy]+pu[0][sx_dn][sy_dn])/9.0;
-	    pu[1][sx][sy] = (pu[1][sx_up][sy_up]+pu[0][sx_up][sy]+pu[1][sx_up][sy_dn]+pu[1][sx][sy_up]+pu[1][sx][sy]+pu[1][sx][sy_dn]+pu[1][sx_dn][sy_up]+pu[1][sx_dn][sy]+pu[1][sx_dn][sy_dn])/9.0;
-	  }
-      }
+	for (int sx=1;sx<=NUMT;sx++)
+		for (int sy=1;sy<=NUMT;sy++)
+		{
+			if(pe[sx][sy]/pow(AT,4)<SMOOTH)
+			{
+				/*
+				int sx_up = sx+1;
+				int sx_dn = sx-1;
+				int sy_up = sy+1;
+				int sy_dn = sy-1;
+				if (sx_up > NUMT) sx_up = NUMT;
+				if (sx_dn < 1)   sx_dn = 1;
+				if (sy_up > NUMT) sy_up = NUMT;
+				if (sy_dn < 1)   sy_dn = 1;
+
+				pu[0][sx][sy] = (pu[0][sx_up][sy_up]+pu[0][sx_up][sy]+pu[0][sx_up][sy_dn]+pu[0][sx][sy_up]+pu[0][sx][sy]+pu[0][sx][sy_dn]+pu[0][sx_dn][sy_up]+pu[0][sx_dn][sy]+pu[0][sx_dn][sy_dn])/9.0;
+				pu[1][sx][sy] = (pu[1][sx_up][sy_up]+pu[0][sx_up][sy]+pu[1][sx_up][sy_dn]+pu[1][sx][sy_up]+pu[1][sx][sy]+pu[1][sx][sy_dn]+pu[1][sx_dn][sy_up]+pu[1][sx_dn][sy]+pu[1][sx_dn][sy_dn])/9.0;
+				*/
+
+				double tmp_u0 = 0.0, tmp_u1 = 0.0, tmp_norm = 0.0;
+				for (int ii=0; ii<3; ii++){
+					for (int jj=0; jj<3; jj++){
+						int sxx = sx - 1 + ii;
+						int syy = sy - 1 + jj;
+
+						if (sxx>NUMT || sxx<1) continue;
+
+						tmp_u0 += pu[0][sx][sy];
+						tmp_u1 += pu[1][sx][sy];
+						tmp_norm += 1.0;
+					}//ii
+				}//jj
+
+				pu[0][sx][sy] = tmp_u0 / tmp_norm;
+				pu[1][sx][sy] = tmp_u1 / tmp_norm;
+			}
+		}
 }
 
 //prepares next time-step
@@ -2774,172 +2810,172 @@ inline void doInc(double eps)
 
   //cout << "am here " << endl;
 
-//   time_t time1,time2;
+	//time_t time1,time2;
 
-  int debug=0;
+	int debug=0;
 
-  int sx,sy;
-  long int position;
-  int nthreads, tid;
-  int chunk=1;
-  gsl_interp_accel *pacc,*Tacc,*cs2acc;
+	int sx,sy;
+	long int position;
+	int nthreads, tid;
+	int chunk=1;
+	gsl_interp_accel *pacc,*Tacc,*cs2acc;
 
 
 #pragma omp parallel shared(nthreads,chunk,u,e,pixy,pib,pixx,piyy,U,E,Pixy,Pixx,Piyy,Pib,t,globut,thf,dtpixx,mypixt,mypiyt,mypitt,mypiee,position,Middle,lowestE) private(sx,sy,tid,pacc,Tacc,cs2acc)
-  {
+	{
 
-    double Dumx[4],Dumy[4],Nabpx[4],Nabpy[4],gDeltpix[4],gDeltpiy[4],Des[4],nablau[4],pigru[4];
+		double Dumx[4],Dumy[4],Nabpx[4],Nabpy[4],gDeltpix[4],gDeltpiy[4],Des[4],nablau[4],pigru[4];
 
-     pacc=gsl_interp_accel_alloc (); 
-     Tacc=gsl_interp_accel_alloc (); 
-     cs2acc=gsl_interp_accel_alloc (); 
-    
-    tid = omp_get_thread_num();
-    if (tid == 0)
-      {
-	nthreads = omp_get_num_threads();
-	//printf("===> Info: Number of threads = %d\n", nthreads);
-      }
-    //printf("===> Info: Thread %d starting...\n",tid);
+		pacc=gsl_interp_accel_alloc (); 
+		Tacc=gsl_interp_accel_alloc (); 
+		cs2acc=gsl_interp_accel_alloc (); 
 
-    #pragma omp for schedule(dynamic,chunk)
-    for(position=0;position<NUMT*NUMT;position++)
-      {
-	sx=position%NUMT+1;
-	sy=position/NUMT+1;
+		tid = omp_get_thread_num();
+		if (tid == 0)
+		{
+			nthreads = omp_get_num_threads();
+			//printf("===> Info: Number of threads = %d\n", nthreads);
+		}
+		//printf("===> Info: Thread %d starting...\n",tid);
 
-	//printf("position =%i sx=%i sy=%i thread=%i\n",position,sx,sy,tid);
-	//for (sx=1;sx<=NUMT;sx++)
-	//for (sy=1;sy<=NUMT;sy++)
-	//{
-	    //these are here to fix the internal indices once
-	    //instead of having to recalc every time -- faster!
-	    //globali=geti(e[sx][sy]);
-	    //globalx=getx(globali,e[sx][sy]);
-	    
-	globut[sx][sy]=ut(sx,sy);
+#pragma omp for schedule(dynamic,chunk)
+		for(position=0;position<NUMT*NUMT;position++)
+		{
+			sx=position%NUMT+1;
+			sy=position/NUMT+1;
 
-	//printf("sx=%i sy=%i globut=%f\n",sx,sy,globut[sx][sy]);
+			//printf("position =%i sx=%i sy=%i thread=%i\n",position,sx,sy,tid);
+			//for (sx=1;sx<=NUMT;sx++)
+			//for (sy=1;sy<=NUMT;sy++)
+			//{
+			//these are here to fix the internal indices once
+			//instead of having to recalc every time -- faster!
+			//globali=geti(e[sx][sy]);
+			//globalx=getx(globali,e[sx][sy]);
 
-	thf[sx][sy][0]=theta0(sx,sy);
-	thf[sx][sy][1]=theta1(sx,sy);
-	thf[sx][sy][3]=theta3(sx,sy);
+			globut[sx][sy]=ut(sx,sy);
 
-	mypixt[sx][sy]=pi(0,2,sx,sy);
-	mypiyt[sx][sy]=pi(1,2,sx,sy);
-	mypitt[sx][sy]=pi(2,2,sx,sy);
-	mypiee[sx][sy]=pi(3,3,sx,sy);
-	
-	dtpiialpha(dtpixx[sx][sy],0,0,sx,sy,pacc,cs2acc,Tacc);
-	dtpiialpha(dtpixy[sx][sy],0,1,sx,sy,pacc,cs2acc,Tacc);
-	dtpiialpha(dtpiyy[sx][sy],1,1,sx,sy,pacc,cs2acc,Tacc);
+			//printf("sx=%i sy=%i globut=%f\n",sx,sy,globut[sx][sy]);
 
-	
+			thf[sx][sy][0]=theta0(sx,sy);
+			thf[sx][sy][1]=theta1(sx,sy);
+			thf[sx][sy][3]=theta3(sx,sy);
 
-	Dumu(Dumx,0,sx,sy); 
-	Dumu(Dumy,1,sx,sy);
-	Nablap(Nabpx,0,sx,sy,pacc,cs2acc);
-	Nablap(Nabpy,1,sx,sy,pacc,cs2acc);
-	gDeltapi(gDeltpix,0,sx,sy,pacc,cs2acc,Tacc);
-	gDeltapi(gDeltpiy,1,sx,sy,pacc,cs2acc,Tacc);
-	De(Des,sx,sy);	
-	nablamuumu(nablau,sx,sy);
-	pigradu(pigru,sx,sy);
-	
+			mypixt[sx][sy]=pi(0,2,sx,sy);
+			mypiyt[sx][sy]=pi(1,2,sx,sy);
+			mypitt[sx][sy]=pi(2,2,sx,sy);
+			mypiee[sx][sy]=pi(3,3,sx,sy);
+
+			dtpiialpha(dtpixx[sx][sy],0,0,sx,sy,pacc,cs2acc,Tacc);
+			dtpiialpha(dtpixy[sx][sy],0,1,sx,sy,pacc,cs2acc,Tacc);
+			dtpiialpha(dtpiyy[sx][sy],1,1,sx,sy,pacc,cs2acc,Tacc);
 
 
 
-	//Matrix
-	
-
-	
-	dtmat[sx][sy][0][0]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumx[0]-Nabpx[0]
-	  //+gDeltagamma(0,sx,sy)
-	  +gDeltpix[0]-u[0][sx][sy]*nablau[0]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
-	dtmat[sx][sy][0][1]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumx[1]-Nabpx[1]
-	  //+gDeltagamma(0,sx,sy)
-	  +gDeltpix[1]-u[0][sx][sy]*nablau[1]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
-	dtmat[sx][sy][0][2]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumx[2]-Nabpx[2]//+gDeltagamma(0,sx,sy)
-	  +gDeltpix[2];
-	dtmat[sx][sy][1][0]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumy[0]-Nabpy[0]//+gDeltagamma(1,sx,sy)
-	  +gDeltpiy[0]-u[1][sx][sy]*nablau[0]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
-	dtmat[sx][sy][1][1]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumy[1]-Nabpy[1]//+gDeltagamma(1,sx,sy)
-	  +gDeltpiy[1]-u[1][sx][sy]*nablau[1]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
-	dtmat[sx][sy][1][2]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumy[2]-Nabpy[2]//+gDeltagamma(1,sx,sy)
-	  +gDeltpiy[2];
-	dtmat[sx][sy][2][0]=Des[0]+(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*nablau[0]-pigru[0];
-	dtmat[sx][sy][2][1]=Des[1]+(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*nablau[1]-pigru[1];
-	dtmat[sx][sy][2][2]=Des[2]+(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*nablau[2]-pigru[2];
-	
-
-	//Vector (written like a 3*0 Matrix)
-	vec[sx][sy][0][0]=Nabpx[3]-(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumx[3]-gDeltagamma(0,sx,sy)-gDeltpix[3]+u[0][sx][sy]*nablau[3]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc)-u[0][sx][sy]*pib[sx][sy]/taupi(sx,sy,Tacc)+dxpi(sx,sy);
-
-	if (isnan(vec[sx][sy][0][0])!=0)
-	  {
-	    cout << "Problem in v00" << endl;
-	    cout << "More specific 1 : " << Nabpx[3] << "\t";
-	    cout << "2 : " << (e[sx][sy]+eos(e[sx][sy],pacc,cs2acc))*Dumx[3] << "\t";
-	    cout << "3 : " << gDeltagamma(0,sx,sy) << "\t";
-	    cout << "4 : " << gDeltpix[3] << endl;
-	  }
-	vec[sx][sy][1][0]=Nabpy[3]-(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumy[3]-gDeltagamma(1,sx,sy)-gDeltpiy[3]+u[1][sx][sy]*nablau[3]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc)-u[1][sx][sy]*pib[sx][sy]/taupi(sx,sy,Tacc)+dypi(sx,sy);
-	vec[sx][sy][2][0]=(Des[3]+(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*nablau[3])*(-1.0)+pigru[3];
-	
-	int check;
-	check=gaussj(dtmat[sx][sy],3,vec[sx][sy],1);
-		//printf("cs %f\n",cs2(sx,sy));  
-	
-	if (check==0)
-	  {
-	    for (int i=0;i<2;i++)
-	      U[i][sx][sy]=u[i][sx][sy]+eps*vec[sx][sy][i][0];
-	    //printf("vecx %f   vecy %f\n",vec[0][0],vec[1][0]);
-	    
-
-	    E[sx][sy]=e[sx][sy]+eps*vec[sx][sy][2][0];
-	    //if smoothing, prevent negative energy densities
-	    if (SMOOTHING)
-	      {
-                if (E[sx][sy]<0)
-		  E[sx][sy]=mTspline.low*pow(AT,4);
-		if (E[sx][sy]>mTspline.high*pow(AT,4))
-		  E[sx][sy]=mTspline.high*pow(AT,4);
-		  //E[sx][sy]=mTspline.low*pow(AT,4);
-               }
-	    Pixx[sx][sy]=pixx[sx][sy]+eps*(dtpixx[sx][sy][0]*vec[sx][sy][0][0]+dtpixx[sx][sy][1]*vec[sx][sy][1][0]+dtpixx[sx][sy][2]*vec[sx][sy][2][0]+dtpixx[sx][sy][3]);
-	    
-	    
-	    Pixy[sx][sy]=pixy[sx][sy]+eps*(dtpixy[sx][sy][0]*vec[sx][sy][0][0]+dtpixy[sx][sy][1]*vec[sx][sy][1][0]+dtpixy[sx][sy][2]*vec[sx][sy][2][0]+dtpixy[sx][sy][3]);
-	    
-	    Piyy[sx][sy]=piyy[sx][sy]+eps*(dtpiyy[sx][sy][0]*vec[sx][sy][0][0]+dtpiyy[sx][sy][1]*vec[sx][sy][1][0]+dtpiyy[sx][sy][2]*vec[sx][sy][2][0]+dtpiyy[sx][sy][3]);
-	    
-	    dtpi[sx][sy][0]=nablau[0]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
-	    dtpi[sx][sy][1]=nablau[1]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
-	    dtpi[sx][sy][3]=nablau[3]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
-	    dtpi[sx][sy][3]-=u[0][sx][sy]*dxpi(sx,sy)+u[1][sx][sy]*dypi(sx,sy);
-	    dtpi[sx][sy][3]-=pib[sx][sy]/taupi(sx,sy,Tacc);
+			Dumu(Dumx,0,sx,sy); 
+			Dumu(Dumy,1,sx,sy);
+			Nablap(Nabpx,0,sx,sy,pacc,cs2acc);
+			Nablap(Nabpy,1,sx,sy,pacc,cs2acc);
+			gDeltapi(gDeltpix,0,sx,sy,pacc,cs2acc,Tacc);
+			gDeltapi(gDeltpiy,1,sx,sy,pacc,cs2acc,Tacc);
+			De(Des,sx,sy);	
+			nablamuumu(nablau,sx,sy);
+			pigradu(pigru,sx,sy);
 
 
-	      
-	    Pib[sx][sy]=pib[sx][sy]+eps*(dtpi[sx][sy][0]*vec[sx][sy][0][0]+dtpi[sx][sy][1]*vec[sx][sy][1][0]+dtpi[sx][sy][3])/globut[sx][sy];
 
-	    //Pixx[sx][sy]=0.0;
-	    //Pixy[sx][sy]=0.0;
-	    //Piyy[sx][sy]=0.0;
-	  }
-	else
-	  {
-	    cout << "Error! at " << sx  << "  " << sy << endl;
-	    snapshot(t,pacc,cs2acc,Tacc);
-	    bflag=1;
-	  }
-      }
-    
-    gsl_interp_accel_free (pacc);
-    gsl_interp_accel_free (Tacc);
-    gsl_interp_accel_free (cs2acc);
-  }//end of parallel section
+
+			//Matrix
+
+
+
+			dtmat[sx][sy][0][0]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumx[0]-Nabpx[0]
+				//+gDeltagamma(0,sx,sy)
+				+gDeltpix[0]-u[0][sx][sy]*nablau[0]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
+			dtmat[sx][sy][0][1]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumx[1]-Nabpx[1]
+				//+gDeltagamma(0,sx,sy)
+				+gDeltpix[1]-u[0][sx][sy]*nablau[1]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
+			dtmat[sx][sy][0][2]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumx[2]-Nabpx[2]//+gDeltagamma(0,sx,sy)
+				+gDeltpix[2];
+			dtmat[sx][sy][1][0]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumy[0]-Nabpy[0]//+gDeltagamma(1,sx,sy)
+				+gDeltpiy[0]-u[1][sx][sy]*nablau[0]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
+			dtmat[sx][sy][1][1]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumy[1]-Nabpy[1]//+gDeltagamma(1,sx,sy)
+				+gDeltpiy[1]-u[1][sx][sy]*nablau[1]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
+			dtmat[sx][sy][1][2]=(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumy[2]-Nabpy[2]//+gDeltagamma(1,sx,sy)
+				+gDeltpiy[2];
+			dtmat[sx][sy][2][0]=Des[0]+(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*nablau[0]-pigru[0];
+			dtmat[sx][sy][2][1]=Des[1]+(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*nablau[1]-pigru[1];
+			dtmat[sx][sy][2][2]=Des[2]+(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*nablau[2]-pigru[2];
+
+
+			//Vector (written like a 3*0 Matrix)
+			vec[sx][sy][0][0]=Nabpx[3]-(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumx[3]-gDeltagamma(0,sx,sy)-gDeltpix[3]+u[0][sx][sy]*nablau[3]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc)-u[0][sx][sy]*pib[sx][sy]/taupi(sx,sy,Tacc)+dxpi(sx,sy);
+
+			if (isnan(vec[sx][sy][0][0])!=0)
+			{
+				cout << "Problem in v00" << endl;
+				cout << "More specific 1 : " << Nabpx[3] << "\t";
+				cout << "2 : " << (e[sx][sy]+eos(e[sx][sy],pacc,cs2acc))*Dumx[3] << "\t";
+				cout << "3 : " << gDeltagamma(0,sx,sy) << "\t";
+				cout << "4 : " << gDeltpix[3] << endl;
+			}
+			vec[sx][sy][1][0]=Nabpy[3]-(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*Dumy[3]-gDeltagamma(1,sx,sy)-gDeltpiy[3]+u[1][sx][sy]*nablau[3]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc)-u[1][sx][sy]*pib[sx][sy]/taupi(sx,sy,Tacc)+dypi(sx,sy);
+			vec[sx][sy][2][0]=(Des[3]+(e[sx][sy]+eos(e[sx][sy],pacc,cs2acc)-pib[sx][sy])*nablau[3])*(-1.0)+pigru[3];
+
+			int check;
+			check=gaussj(dtmat[sx][sy],3,vec[sx][sy],1);
+			//printf("cs %f\n",cs2(sx,sy));  
+
+			if (check==0)
+			{
+				for (int i=0;i<2;i++)
+					U[i][sx][sy]=u[i][sx][sy]+eps*vec[sx][sy][i][0];
+				//printf("vecx %f   vecy %f\n",vec[0][0],vec[1][0]);
+
+
+				E[sx][sy]=e[sx][sy]+eps*vec[sx][sy][2][0];
+				//if smoothing, prevent negative energy densities
+				if (SMOOTHING)
+				{
+					if (E[sx][sy]<0)
+						E[sx][sy]=mTspline.low*pow(AT,4);
+					if (E[sx][sy]>mTspline.high*pow(AT,4))
+						E[sx][sy]=mTspline.high*pow(AT,4);
+					//E[sx][sy]=mTspline.low*pow(AT,4);
+				}
+				Pixx[sx][sy]=pixx[sx][sy]+eps*(dtpixx[sx][sy][0]*vec[sx][sy][0][0]+dtpixx[sx][sy][1]*vec[sx][sy][1][0]+dtpixx[sx][sy][2]*vec[sx][sy][2][0]+dtpixx[sx][sy][3]);
+
+
+				Pixy[sx][sy]=pixy[sx][sy]+eps*(dtpixy[sx][sy][0]*vec[sx][sy][0][0]+dtpixy[sx][sy][1]*vec[sx][sy][1][0]+dtpixy[sx][sy][2]*vec[sx][sy][2][0]+dtpixy[sx][sy][3]);
+
+				Piyy[sx][sy]=piyy[sx][sy]+eps*(dtpiyy[sx][sy][0]*vec[sx][sy][0][0]+dtpiyy[sx][sy][1]*vec[sx][sy][1][0]+dtpiyy[sx][sy][2]*vec[sx][sy][2][0]+dtpiyy[sx][sy][3]);
+
+				dtpi[sx][sy][0]=nablau[0]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
+				dtpi[sx][sy][1]=nablau[1]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
+				dtpi[sx][sy][3]=nablau[3]*zetaoeta(T(sx,sy,Tacc))*etataupi(sx,sy,pacc,cs2acc);
+				dtpi[sx][sy][3]-=u[0][sx][sy]*dxpi(sx,sy)+u[1][sx][sy]*dypi(sx,sy);
+				dtpi[sx][sy][3]-=pib[sx][sy]/taupi(sx,sy,Tacc);
+
+
+
+				Pib[sx][sy]=pib[sx][sy]+eps*(dtpi[sx][sy][0]*vec[sx][sy][0][0]+dtpi[sx][sy][1]*vec[sx][sy][1][0]+dtpi[sx][sy][3])/globut[sx][sy];
+
+				//Pixx[sx][sy]=0.0;
+				//Pixy[sx][sy]=0.0;
+				//Piyy[sx][sy]=0.0;
+			}
+			else
+			{
+				cout << "Error! at " << sx  << "  " << sy << endl;
+				snapshot(t,pacc,cs2acc,Tacc);
+				bflag=1;
+			}
+		}
+
+		gsl_interp_accel_free (pacc);
+		gsl_interp_accel_free (Tacc);
+		gsl_interp_accel_free (cs2acc);
+		}//end of parallel section
 
   
 }
@@ -2955,7 +2991,7 @@ void Evolve()
   long int i=0;
   //for (long int i=1;i<=STEPS;i++) 
   //{
-  while((reachedTf==0)&&(wflag==0)) 
+  while((reachedTf==0)&&(wflag==0)&&(t/fmtoGeV*AT<10.0)) 
     {
       i++;
       // evolve fields eps forward in time storing updated fields in captial vars
