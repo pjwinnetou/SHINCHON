@@ -1,5 +1,5 @@
-const int nbins = 100; //TODO: change me
-const double max_x = 10; // TODO: change me
+const int nbins = 150; //TODO: change me
+const double max_x = 15; // TODO: change me
 const bool saveQuarkDists = false; // TODO: whether to save wounded nucleon distributions in individual root files.
 
 // Output file from runglauber should be called "outFile_${system}_${firstEvent}_${lastEvent}.root".
@@ -9,13 +9,13 @@ const int bmin = 0;
 const int bmax = 1;
 const int firstEvent = 0;
 const int lastEvent = 100;
-const int scaler = 5;
+const int scaler = 3;
 
 // TODO: select an energy scaling value
 //const double e0 = (scaler*0.1+0.1)*0.00150022 * TMath::Power(140.*max_x/(5.*nbins), 4); // 200 GeV (RHIC) 
 //const double e0 = (scaler*0.1+0.3)*0.00150022 * TMath::Power(140.*max_x/(5.*nbins), 4); // >5 TeV (LHC) 
 //const double e0 = (scaler*0.1+0.6)*0.00150022 * TMath::Power(140.*max_x/(5.*nbins), 4); // >5 TeV (LHC) //b 12-13 fm 
-const double e0 = (scaler*0.1+1.2)*0.00150022 * TMath::Power(140.*max_x/(5.*nbins), 4); // >5 TeV (LHC) //PbPb b 0-1 fm 
+const double e0 = (scaler*0.1+2.0)*0.00150022 * TMath::Power(140.*max_x/(5.*nbins), 4); // >5 TeV (LHC) //PbPb b 0-1 fm 
 
 void Hist2Txt () {
 
@@ -40,9 +40,9 @@ void Hist2Txt () {
       for (int ybin = 1; ybin <= nbins; ybin++) {
 				double content = initedHist->GetBinContent(xbin, ybin); 
 
-				//if ( content<0.001 ){
+				//if ( content<1e-20 ){
 				if ( 0 ){
-					initedHist->SetBinContent(xbin, ybin, 0.001*e0);
+					initedHist->SetBinContent(xbin, ybin, 1e-20*e0);
 				}else{
 					initedHist->SetBinContent(xbin, ybin, content*e0);
 				}
