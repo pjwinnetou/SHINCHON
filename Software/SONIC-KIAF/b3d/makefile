@@ -30,3 +30,9 @@ progdata_link :
 
 clean :
 	rm -f b3d analyze
+	rm -f ${MADAI_REPO}/rhic/anal/build/*
+	rm -f ${MADAI_REPO}/rhic/b3d/build/*
+	rm -f ${MADAI_REPO}/rhic/coral/build/coral/* 
+	rm -f ${MADAI_REPO}/rhic/coral/build/coralutils/* 
+	rm -f ${MADAI_REPO}/rhic/coral/build/xgraph/* 
+	rm -f ${MADAI_REPO}/rhic/rhicutils/build/*
