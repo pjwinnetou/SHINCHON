@@ -14,7 +14,7 @@ void CalcRaaV2(){
 	const float const_hbarc = 197.5; //MeV fm
 	const float const_mY = 9.46; //GeV
 	//const float const_mY = 4.18; //GeV
-	const int nY = 10000;
+	const int nSAMP = 10; //times Ncoll
 
 	//const int ntime = 7;
 	//float f_time[ntime] = {0.5, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0};
@@ -140,6 +140,7 @@ void CalcRaaV2(){
 	TGraphErrors *gRAA[nrun][ntime];
 
 	TProfile *hprofRAA_Npart = new TProfile("hprofRAA_Npart","",100,0,400);
+	TProfile *hprofRAA_pT = new TProfile("hprofRAA_pT","",100,0,20);
 	TProfile2D *hprofRAA_xy[nrun];
 
 	for (int irun=0; irun<nrun; irun++){
@@ -163,14 +164,19 @@ void CalcRaaV2(){
 			timeHydro[irun][it] = htimeHydro->GetBinContent(it+1);
 		}
 
+		const int nY = nSAMP * Gncoll;
+
 		//Upsilon
 		for (int iY=0; iY<nY; iY++){
 
 			//Momentum
-			double pT = 3.0;
+			//double pT = 3.0;
+			double pT = 20.0*gRandom->Rndm();
 			double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
 			double px = pT*cos(phi);
 			double py = pT*sin(phi);
+
+			int pTbin = int(pT/20.0);
 
 			//Beta
 			double bx = fP->GetX(fabs(px)); 
@@ -193,7 +199,9 @@ void CalcRaaV2(){
 			{
 				float TPre = hTHydro[0]->GetBinContent(hTHydro[0]->FindBin(vx, vy))*1000.;
 				if ( TPre>170.0 ){
-					float GdissPre = gGdiss[3]->Eval(TPre);
+					float GdissPre0 = gGdiss[pTbin]->Eval(TPre);
+					float GdissPre1 = gGdiss[pTbin+1]->Eval(TPre);
+					float GdissPre = GdissPre0 + (GdissPre1 - GdissPre0)*(pT - pTbin);
 					modF = exp(-(0.2)*GdissPre/const_hbarc);
 				}else{
 					modF = 1.0;
@@ -220,7 +228,9 @@ void CalcRaaV2(){
 					continue;
 				}
 
-				float Gdiss = gGdiss[3]->Eval((THydro0+THydro1)/2);
+				float Gdiss0 = gGdiss[pTbin]->Eval((THydro0+THydro1)/2);
+				float Gdiss1 = gGdiss[pTbin+1]->Eval((THydro0+THydro1)/2);
+				float Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin); 
 				modF *= exp(-(dt)*Gdiss/const_hbarc);
 
 				vx += dx;
@@ -228,8 +238,12 @@ void CalcRaaV2(){
 
 			}//it
 
-			hprofRAA_Npart->Fill(Npart[irun], modF);
-			hprofRAA_xy[irun]->Fill(vx0, vy0, modF);
+			if ( pT>2 && pT<4 ){
+				hprofRAA_Npart->Fill(Npart[irun], modF);
+				hprofRAA_xy[irun]->Fill(vx0, vy0, modF);
+			}
+
+			hprofRAA_pT->Fill(pT, modF);
 
 		}//iY
 
@@ -274,13 +288,47 @@ void CalcRaaV2(){
 		hprofRAA_xy[0]->Draw("colz same");
 	}
 
+	if ( bDRAW ){
+
+		TCanvas *c2 = new TCanvas("c2","c2",1.2*2*500,500);
+		c2->Divide(2,1);
+
+		c2->cd(1);
+		SetPadStyle();
+		gPad->SetRightMargin(0.13);
+		htmp = (TH1D*)gPad->DrawFrame(0,0,400,1.2);
+		htmp->GetXaxis()->SetTitle("N_{part}");
+		htmp->GetXaxis()->SetLabelSize(0.04);
+		htmp->GetXaxis()->SetTitleSize(0.05);
+		htmp->GetYaxis()->SetTitle("R_{AA} at p_{T}=3 GeV/c");
+		htmp->GetYaxis()->SetLabelSize(0.04);
+		htmp->GetYaxis()->SetTitleSize(0.05);
+
+		hprofRAA_Npart->SetLineWidth(2);
+		hprofRAA_Npart->Draw("same");
+
+
+		c2->cd(2);
+		SetPadStyle();
+		gPad->SetRightMargin(0.13);
+		htmp = (TH1D*)gPad->DrawFrame(0,0,20,1.2);
+		htmp->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+		htmp->GetXaxis()->SetLabelSize(0.04);
+		htmp->GetXaxis()->SetTitleSize(0.05);
+		htmp->GetYaxis()->SetTitle("R_{AA}");
+		htmp->GetYaxis()->SetLabelSize(0.04);
+		htmp->GetYaxis()->SetTitleSize(0.05);
+
+		hprofRAA_pT->SetLineWidth(2);
+		hprofRAA_pT->Draw("same");
+
+	}
+
 
 	//hprofRAA_xy[0]->Draw("colz");
 
 	return;
 
-	hprofRAA_Npart->SetLineWidth(2);
-	hprofRAA_Npart->Draw();
 
 	return;
 
