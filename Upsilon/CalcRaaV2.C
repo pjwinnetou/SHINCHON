@@ -1,5 +1,22 @@
 #include "Style.h"
 
+#include <TRandom.h>
+#include <TRandom3.h>
+#include <TH1.h>
+#include <TFile.h>
+#include <TProfile.h>
+#include <TH2.h>
+#include <TTree.h>
+#include <TF1.h>
+#include <TCanvas.h>
+#include <TGraphErrors.h>
+#include <TProfile2D.h>
+
+#include <iostream>
+#include <fstream>
+
+using namespace std;
+
 void CalcRaaV2(){
 
 	gStyle->SetOptStat(0);
@@ -7,19 +24,17 @@ void CalcRaaV2(){
 
 	gRandom = new TRandom3(0);
 
-	const bool bDRAW = true; 
-	const bool bSAVE = bDRAW && false; 
+	const bool bDRAW = false; 
+	const bool bSAVE = true; 
+	const bool b2D = true;
 
-	const int nrun = 1;
+	const int run_i = 0;
+	const int run_f = 100;
+	const int nrun = 1000;
 	const float const_hbarc = 197.5; //MeV fm
 	const float const_mY = 9.46; //GeV
 	//const float const_mY = 4.18; //GeV
-	const int nSAMP = 10; //times Ncoll
-
-	//const int ntime = 7;
-	//float f_time[ntime] = {0.5, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0};
-	const int ntime = 2;
-	float f_time[ntime] = {0.5, 10.0};
+	const int nSAMP = 100; //times Ncoll
 
 	ifstream fdata;
 
@@ -120,8 +135,6 @@ void CalcRaaV2(){
 		SetPadStyle();
 		htmp = (TH1D*)gPad->DrawFrame(0,0,1,25);
 		SetHistoStyle("#beta","p [GeV]");
-		//htmp->GetXaxis()->SetTitle("#beta");
-		//htmp->GetYaxis()->SetTitle("p [GeV]");
 
 		fP->SetLineColor(1);
 		fP->SetLineWidth(3);
@@ -131,15 +144,14 @@ void CalcRaaV2(){
 	//return;
 	
 	//Glauber
-	//TFile *infileGlauber = new TFile("/alice/home/shlim/work/SHINCHON/SHINCHON/Software/SONIC-KIAF/input/MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
-	TFile *infileGlauber = new TFile("MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
+	TFile *infileGlauber = new TFile("/alice/home/shlim/work/SHINCHON/SHINCHON/Software/SONIC-KIAF/input/MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
+	//TFile *infileGlauber = new TFile("MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
 	TTree *TGlauber = (TTree*)infileGlauber->Get("lemon");
 	int Gnpart, Gncoll;
 	TGlauber->SetBranchAddress("npart",&Gnpart);
 	TGlauber->SetBranchAddress("ncoll",&Gncoll);
 
 	//QGP T profile
-	//TFile *infileHydro = new TFile("SONIC_profile_PbPb5TeV_event00008.root","read");
 	TH2D *hTHydro[300];
 	TGraphErrors *gTHydro[nrun];
 	TF1 *fT2[nrun];
@@ -148,22 +160,20 @@ void CalcRaaV2(){
 	float freezeT[nrun];
 	float Npart[nrun];
 
-	TGraphErrors *gInitTHydro = new TGraphErrors;
-	TGraphErrors *gMeanTHydro = new TGraphErrors;
-	TGraphErrors *gFreezeTHydro = new TGraphErrors;
-	TGraphErrors *gRAAHydro = new TGraphErrors;
-	TGraphErrors *gRAA[nrun][ntime];
-
-	TProfile *hprofRAA_Npart = new TProfile("hprofRAA_Npart","",100,0,400);
+	TProfile *hprofRAA_Npart = new TProfile("hprofRAA_Npart","",40,0,400);
 	TProfile *hprofRAA_pT = new TProfile("hprofRAA_pT","",100,0,20);
 	TProfile2D *hprofRAA_xy[nrun];
 
-	for (int irun=0; irun<nrun; irun++){
+	for (int irun=run_i; irun<run_f; irun++){
 
-		hprofRAA_xy[irun] = new TProfile2D(Form("hprofRAA_xy_run%05d",irun),"",100,-15,15,100,-15,15);
+		cout << "Scan event #" << irun << endl;
 
-		//TFile *infileHydro = new TFile(Form("/alice/home/shlim/work/SHINCHON/SHINCHON/Software/Diffusion/macro/SONIC_profile_PbPb5TeV_0_18fm_event%05d.root",irun),"read");
-		TFile *infileHydro = new TFile(Form("SONIC_profile_PbPb5TeV_0_18fm_event%05d.root",irun),"read");
+		if ( b2D ){
+			hprofRAA_xy[irun] = new TProfile2D(Form("hprofRAA_xy_run%05d",irun),"",100,-15,15,100,-15,15);
+		}
+
+		TFile *infileHydro = new TFile(Form("/alice/data/shlim/SONIC_profile_PbPb5TeV_0_18fm/SONIC_profile_PbPb5TeV_0_18fm_event%05d.root",irun),"read");
+		//TFile *infileHydro = new TFile(Form("SONIC_profile_PbPb5TeV_0_18fm_event%05d.root",irun),"read");
 		TH1D *htimeHydro = (TH1D*)infileHydro->Get("Time");
 		int ntimeHydro = (int)htimeHydro->GetEntries();
 
@@ -185,13 +195,14 @@ void CalcRaaV2(){
 		for (int iY=0; iY<nY; iY++){
 
 			//Momentum
-			//double pT = 3.0;
-			double pT = 20.0*gRandom->Rndm();
+			//double pT = 20.0*gRandom->Rndm();
+			double pT = 3.0;
 			double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
 			double px = pT*cos(phi);
 			double py = pT*sin(phi);
 
-			int pTbin = int(pT/20.0);
+			int pTbin = int(pT);
+			if ( pTbin>=20 ) continue;
 
 			//Beta
 			double bx = fP->GetX(fabs(px)); 
@@ -212,7 +223,7 @@ void CalcRaaV2(){
 
 			//Pre-Hydro 
 			{
-				float TPre = hTHydro[0]->GetBinContent(hTHydro[0]->FindBin(vx, vy))*1000.;
+				float TPre = 1.20*hTHydro[0]->GetBinContent(hTHydro[0]->FindBin(vx, vy))*1000.;
 				if ( TPre>170.0 ){
 					float GdissPre0 = gGdiss[pTbin]->Eval(TPre);
 					float GdissPre1 = gGdiss[pTbin+1]->Eval(TPre);
@@ -225,7 +236,7 @@ void CalcRaaV2(){
 			}
 
 			//Time evolution
-			for (int it=0; it<ntimeHydro; it++){
+			for (int it=0; it<ntimeHydro-1; it++){
 
 				if ( nFO>=10 ) break;
 
@@ -253,9 +264,11 @@ void CalcRaaV2(){
 
 			}//it
 
-			if ( pT>2 && pT<4 ){
+			if ( pT>2.0 && pT<4.0 ){
 				hprofRAA_Npart->Fill(Npart[irun], modF);
-				hprofRAA_xy[irun]->Fill(vx0, vy0, modF);
+				if ( b2D ){
+					hprofRAA_xy[irun]->Fill(vx0, vy0, modF);
+				}
 			}
 
 			hprofRAA_pT->Fill(pT, modF);
@@ -298,9 +311,9 @@ void CalcRaaV2(){
 		htmp->GetYaxis()->SetLabelSize(0.04);
 		htmp->GetYaxis()->SetTitleSize(0.05);
 
-		hprofRAA_xy[0]->SetMaximum(1);
-		hprofRAA_xy[0]->SetMinimum(0);
-		hprofRAA_xy[0]->Draw("colz same");
+		//hprofRAA_xy[0]->SetMaximum(1);
+		//hprofRAA_xy[0]->SetMinimum(0);
+		//hprofRAA_xy[0]->Draw("colz same");
 	}
 
 	if ( bDRAW ){
@@ -339,72 +352,25 @@ void CalcRaaV2(){
 
 	}
 
+	if ( bSAVE ){
+
+		TFile *outfile = new TFile(Form("outfile_RaaV2_%04d_%04d.root",run_i,run_f),"recreate");
+
+		hprofRAA_Npart->Write();
+		hprofRAA_pT->Write();
+
+		if ( b2D ){
+			for (int irun=run_i; irun<run_f; irun++){
+				hprofRAA_xy[irun]->Write();
+			}
+		}
+
+	}
+
 
 	//hprofRAA_xy[0]->Draw("colz");
 
 	return;
-
-
-	return;
-
-	TF1 *fT = new TF1("fT","[0]*pow([1]/x,0.333)",0.3,15);
-	fT->SetParameters(550, 0.3);
-
-	if ( bDRAW ){
-		TCanvas *c1 = new TCanvas("c1","c1",1.2*500,500);
-		SetPadStyle();
-		htmp = (TH1D*)gPad->DrawFrame(0,100,12,600);
-		SetHistoStyle("t [fm/c]","T [MeV]");
-
-		fT->SetLineColor(1);
-		fT->SetLineWidth(3);
-		fT->Draw("same");
-
-		gTHydro[0]->SetLineWidth(1);
-		gTHydro[0]->SetLineColor(2);
-		gTHydro[0]->SetLineStyle(7);
-		gTHydro[0]->Draw("C");
-
-		fT2[0]->SetRange(0.3,1.2);
-		fT2[0]->Draw("same");
-
-		TCanvas *c2 = new TCanvas("c2","c2",1.2*500,500);
-		SetPadStyle();
-		htmp = (TH1D*)gPad->DrawFrame(0,0,400,600);
-		SetHistoStyle("#LTN_{part}#GT","T_{init} [MeV]");
-
-		gInitTHydro->SetLineStyle(7);
-		gInitTHydro->SetLineColor(1);
-		gInitTHydro->Draw("p");
-
-		TCanvas *c3 = new TCanvas("c3","c3",1.2*500,500);
-		SetPadStyle();
-		htmp = (TH1D*)gPad->DrawFrame(0,0,400,10);
-		SetHistoStyle("#LTN_{part}#GT","#tau_{FO} [fm]");
-
-		gFreezeTHydro->SetLineStyle(7);
-		gFreezeTHydro->SetLineColor(1);
-		gFreezeTHydro->Draw("p");
-
-		TCanvas *c4 = new TCanvas("c4","c4",1.2*500,500);
-		SetPadStyle();
-		htmp = (TH1D*)gPad->DrawFrame(0,0,400,1.1);
-		SetHistoStyle("#LTN_{part}#GT","R_{AA} p_{T}=3 GeV");
-
-		gRAAHydro->SetLineStyle(7);
-		gRAAHydro->SetLineColor(1);
-		gRAAHydro->Draw("p");
-	}
-
-	if ( bSAVE ){
-
-		TFile *outfile = new TFile("outfile.root","recreate");
-
-		gInitTHydro->Write("gInitTHydro");
-		gFreezeTHydro->Write("gFreezeTHydro");
-		gRAAHydro->Write("gRAAHydro");
-
-	}
 
 	//Calculate RAA
 
