@@ -164,12 +164,38 @@ void CalcRaaV2(){
 	TProfile *hprofRAA_pT = new TProfile("hprofRAA_pT","",100,0,20);
 	TProfile2D *hprofRAA_xy[nrun];
 
+
+        TProfile *hprofRAA_Npart_rl = new TProfile("hprofRAA_Npart_rl","",40,0,400);
+        TProfile *hprofRAA_pT_rl = new TProfile("hprofRAA_pT_rl","",100,0,20);
+        TProfile2D *hprofRAA_xy_rl[nrun];
+
+//****
+        const int nPtBin = 10;
+        double PtBin[nPtBin] = {
+                0, 2, 4, 6, 8,
+                12, 25, 50, 100, 1e4 };
+
+        const int nNpartBin = 10;
+        double NpartBin[nNpartBin] = {
+                20, 50, 80, 100, 150,
+                200, 250, 300, 350, 1e3 };
+        const int nPhiBin = 33;
+        double PhiBin[nPhiBin];
+        for(int phi=0;phi<nPhiBin;phi++) PhiBin[phi] = (TMath::Pi()*2.0 / nPhiBin) * phi;
+
+//      TProfile3D* hFinalState = new TProfile3D("hFinalState","hFinalState",
+        TH3D* hFinalState = new TH3D("hFinalState","hFinalState",
+                nPtBin-1, PtBin, nNpartBin-1, NpartBin, nPhiBin-1, PhiBin);
+//**** temporary bin definition.
+
+
 	for (int irun=run_i; irun<run_f; irun++){
 
 		cout << "Scan event #" << irun << endl;
 
 		if ( b2D ){
 			hprofRAA_xy[irun] = new TProfile2D(Form("hprofRAA_xy_run%05d",irun),"",100,-15,15,100,-15,15);
+			hprofRAA_xy_rl[irun] = new TProfile2D(Form("hprofRAA_xy_rl_run%05d",irun),"",100,-15,15,100,-15,15);
 		}
 
 		TFile *infileHydro = new TFile(Form("/alice/data/shlim/SONIC_profile_PbPb5TeV_0_18fm/SONIC_profile_PbPb5TeV_0_18fm_event%05d.root",irun),"read");
@@ -221,6 +247,8 @@ void CalcRaaV2(){
 			double modF = 1.0;
 			int nFO = 0;
 
+			double det_flg = 1.0;
+
 			//Pre-Hydro 
 			{
 				float TPre = 1.20*hTHydro[0]->GetBinContent(hTHydro[0]->FindBin(vx, vy))*1000.;
@@ -229,6 +257,7 @@ void CalcRaaV2(){
 					float GdissPre1 = gGdiss[pTbin+1]->Eval(TPre);
 					float GdissPre = GdissPre0 + (GdissPre1 - GdissPre0)*(pT - pTbin);
 					modF = exp(-(0.2)*GdissPre/const_hbarc);
+					if( exp(-(0.2)*GdissPre/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
 				}else{
 					modF = 1.0;
 					nFO++;
@@ -258,6 +287,7 @@ void CalcRaaV2(){
 				float Gdiss1 = gGdiss[pTbin+1]->Eval((THydro0+THydro1)/2);
 				float Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin); 
 				modF *= exp(-(dt)*Gdiss/const_hbarc);
+				if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
 
 				vx += dx;
 				vy += dy;
@@ -266,13 +296,16 @@ void CalcRaaV2(){
 
 			if ( pT>2.0 && pT<4.0 ){
 				hprofRAA_Npart->Fill(Npart[irun], modF);
+				hprofRAA_Npart_rl->Fill(Npart[irun], det_flg );
 				if ( b2D ){
 					hprofRAA_xy[irun]->Fill(vx0, vy0, modF);
+					hprofRAA_xy_rl[irun]->Fill(vx0, vy0, det_flg );
 				}
 			}
+			hFinalState->Fill( pT, Npart[irun], TVector2(vx,vy).Phi(), det_flg );
 
 			hprofRAA_pT->Fill(pT, modF);
-
+			hprofRAA_pT_rl->Fill(pT, det_flg );
 		}//iY
 
 		infileHydro->Close();
@@ -364,7 +397,7 @@ void CalcRaaV2(){
 				hprofRAA_xy[irun]->Write();
 			}
 		}
-
+		hFinalState->Write();
 	}
 
 
