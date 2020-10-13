@@ -73,9 +73,10 @@ void CalcRaaV2(){
 	TCanvas *c0;
 	if ( bDRAW ){
 		c0 = new TCanvas("c0","c0",1.2*500,500);
+		SetPadStyle();
+
 		htmp = (TH1D*)gPad->DrawFrame(170,0,500,200);
-		htmp->GetXaxis()->SetTitle("T [MeV]");
-		htmp->GetYaxis()->SetTitle("#Gamma_{diss} [MeV]");
+		SetHistoStyle("T [MeV]","#Gamma_{diss} [MeV]");
 
 		for (int ipt=0; ipt<21; ipt++){
 			gGdiss[ipt]->SetLineWidth(3);
@@ -88,12 +89,26 @@ void CalcRaaV2(){
 				gGdiss[ipt]->SetLineColor(kBlue);
 			}else if ( ipt==15 ){
 				gGdiss[ipt]->SetLineColor(kMagenta);
+			}else if ( ipt==20 ){
+				gGdiss[ipt]->SetLineColor(1);
 			}
 			gGdiss[ipt]->Draw("C");
 		}
+
+		TLegend *leg = new TLegend(0.2,0.6,0.6,0.9);
+		leg->SetFillStyle(0);
+		leg->SetBorderSize(0);
+		leg->SetTextFont(43);
+		leg->SetTextSize(20);
+		leg->AddEntry(gGdiss[0],"p_{T}=0 GeV/c","L");
+		leg->AddEntry(gGdiss[5],"p_{T}=5 GeV/c","L");
+		leg->AddEntry(gGdiss[10],"p_{T}=10 GeV/c","L");
+		leg->AddEntry(gGdiss[15],"p_{T}=15 GeV/c","L");
+		leg->AddEntry(gGdiss[20],"p_{T}=20 GeV/c","L");
+		leg->Draw();
 	}
 
-	//return;
+	return;
 
 	//Upsilon beta vs. p 
 	TF1 *fP = new TF1("fP","[0]*x/sqrt(1-x*x)",0,1);
