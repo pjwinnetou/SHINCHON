@@ -181,7 +181,7 @@ void CalcRaaV2(){
                 200, 250, 300, 350, 1e3 };
         const int nPhiBin = 33;
         double PhiBin[nPhiBin];
-        for(int phi=0;phi<nPhiBin;phi++) PhiBin[phi] = (TMath::Pi()*2.0 / nPhiBin) * phi;
+        for(int phi=0;phi<nPhiBin;phi++) PhiBin[phi] = (TMath::Pi()*2.0 / (nPhiBin-1) ) * phi;
 
 //      TProfile3D* hFinalState = new TProfile3D("hFinalState","hFinalState",
         TH3D* hFinalState = new TH3D("hFinalState","hFinalState",
@@ -302,7 +302,7 @@ void CalcRaaV2(){
 					hprofRAA_xy_rl[irun]->Fill(vx0, vy0, det_flg );
 				}
 			}
-			hFinalState->Fill( pT, Npart[irun], TVector2(vx,vy).Phi(), det_flg );
+			hFinalState->Fill( pT, Npart[irun], TVector2(vx-vx0,vy-vy0).Phi(), det_flg );
 
 			hprofRAA_pT->Fill(pT, modF);
 			hprofRAA_pT_rl->Fill(pT, det_flg );
