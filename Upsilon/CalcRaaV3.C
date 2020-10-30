@@ -431,7 +431,7 @@ void CalcRaaV3(){
 Double_t fTsallis1S_v2(Double_t *x, Double_t *fpar)
 {
   Float_t xx = x[0];
-  Double_t Y1Smass = 10.023;
+  Double_t Y1Smass = 9.46;
   Double_t q = fpar[0];
   Double_t T = fpar[1];
   Double_t c = fpar[2];
