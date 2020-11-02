@@ -17,7 +17,9 @@
 
 using namespace std;
 
-void CalcRaaV2(){
+Double_t fTsallis1S_v2(Double_t *x, Double_t *fpar);
+
+void CalcRaaV3(){
 
 	gStyle->SetOptStat(0);
 	gStyle->SetPalette(55);
@@ -123,7 +125,7 @@ void CalcRaaV2(){
 		leg->Draw();
 	}
 
-	return;
+	//return;
 
 	//Upsilon beta vs. p 
 	TF1 *fP = new TF1("fP","[0]*x/sqrt(1-x*x)",0,1);
@@ -144,8 +146,8 @@ void CalcRaaV2(){
 	//return;
 	
 	//Glauber
-	TFile *infileGlauber = new TFile("/alice/home/shlim/work/SHINCHON/SHINCHON/Software/SONIC-KIAF/input/MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
-	//TFile *infileGlauber = new TFile("MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
+	//TFile *infileGlauber = new TFile("/alice/home/shlim/work/SHINCHON/SHINCHON/Software/SONIC-KIAF/input/MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
+	TFile *infileGlauber = new TFile("/alice/home/jseo/MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
 	TTree *TGlauber = (TTree*)infileGlauber->Get("lemon");
 	int Gnpart, Gncoll;
 	TGlauber->SetBranchAddress("npart",&Gnpart);
@@ -169,6 +171,8 @@ void CalcRaaV2(){
         TProfile *hprofRAA_pT_rl = new TProfile("hprofRAA_pT_rl","",100,0,20);
         TProfile2D *hprofRAA_xy_rl[nrun];
 
+	TProfile *hprofRAA_Npart_allpT = new TProfile("hprofRAA_Npart_allpT","",40,0,400);
+
 //****
         const int nPtBin = 10;
         double PtBin[nPtBin] = {
@@ -181,13 +185,17 @@ void CalcRaaV2(){
                 200, 250, 300, 350, 1e3 };
         const int nPhiBin = 33;
         double PhiBin[nPhiBin];
-        for(int phi=0;phi<nPhiBin;phi++) PhiBin[phi] = (TMath::Pi()*2.0 / (nPhiBin-1) ) * phi;
+        for(int phi=0;phi<nPhiBin;phi++) PhiBin[phi] = (TMath::Pi()*2.0 / nPhiBin) * phi;
 
 //      TProfile3D* hFinalState = new TProfile3D("hFinalState","hFinalState",
         TH3D* hFinalState = new TH3D("hFinalState","hFinalState",
                 nPtBin-1, PtBin, nNpartBin-1, NpartBin, nPhiBin-1, PhiBin);
 //**** temporary bin definition.
 
+//Init
+   	TF1 *fInitialUpsilon = new TF1("fInitialUpsilon",fTsallis1S_v2,0,30,3);
+        fInitialUpsilon -> SetParameters(  1.06450e+00 ,  7.97649e-01 , 100);
+//Init
 
 	for (int irun=run_i; irun<run_f; irun++){
 
@@ -222,7 +230,8 @@ void CalcRaaV2(){
 
 			//Momentum
 			//double pT = 20.0*gRandom->Rndm();
-			double pT = 3.0;
+			//double pT = 3.0;
+			double pT = fInitialUpsilon->GetRandom();
 			double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
 			double px = pT*cos(phi);
 			double py = pT*sin(phi);
@@ -302,7 +311,9 @@ void CalcRaaV2(){
 					hprofRAA_xy_rl[irun]->Fill(vx0, vy0, det_flg );
 				}
 			}
-			hFinalState->Fill( pT, Npart[irun], TVector2(vx-vx0,vy-vy0).Phi(), det_flg );
+			hFinalState->Fill( pT, Npart[irun], TVector2(vx,vy).Phi(), det_flg );
+			
+			hprofRAA_Npart_allpT->Fill(Npart[irun], modF);
 
 			hprofRAA_pT->Fill(pT, modF);
 			hprofRAA_pT_rl->Fill(pT, det_flg );
@@ -391,6 +402,7 @@ void CalcRaaV2(){
 
 		hprofRAA_Npart->Write();
 		hprofRAA_pT->Write();
+		hprofRAA_Npart_allpT->Write();
 
 		if ( b2D ){
 			for (int irun=run_i; irun<run_f; irun++){
@@ -414,4 +426,18 @@ void CalcRaaV2(){
 
 
 
+}
+
+Double_t fTsallis1S_v2(Double_t *x, Double_t *fpar)
+{
+  Float_t xx = x[0];
+  Double_t Y1Smass = 9.46;
+  Double_t q = fpar[0];
+  Double_t T = fpar[1];
+  Double_t c = fpar[2];
+  Double_t mT = TMath::Sqrt(Y1Smass*Y1Smass+xx*xx);
+  Double_t pow = TMath::Power((1+(q-1)*mT/T),(-q/(q-1)));
+
+  Double_t f = c*mT*xx*pow;
+  return f;
 }
