@@ -148,7 +148,7 @@ void drawRAA_nPart_compare_data(int nrun = 10, int kInitPos=1, bool isLine=true)
   leg->SetHeader("#varUpsilon(1S) (#eta#approx0)");
   if(!isLine) leg->AddEntry(gRAA_npart,"SHINCHON","pe");
   else if(isLine) leg->AddEntry(gRAA_npart,"SHINCHON","l");
-  leg->AddEntry(grCMS,"CMS (arXiv:2006.07707)","pe");
+  leg->AddEntry(grCMS,"CMS (PLB790(2019)10)","pe");
   leg->Draw("same");
 
   double lab_posx = 0.275; double lab_posy = 0.87; double lab_pos_diff = 0.269;
