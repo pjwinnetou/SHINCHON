@@ -25,7 +25,7 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine = false
   double exsys[nPt] =  {1.5, 1.5, 3, 4};
   double ptBin_m[nPt] = {1.5, 4.5, 9, 16};
 
-  double ymin = -0.011; double ymax = 0.012; double xmin = 0; double xmax = 20;
+  double ymin = -0.020; double ymax = 0.012; double xmin = 0; double xmax = 20;
 
   //// read input file : value & stat.
   TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_%s_nRun%d.root",fitor,fPosStr,nrun),"read");
@@ -55,6 +55,7 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine = false
     gv2_fit_err->SetPointError(ipt, exsys[ipt], ftot[ipt]->GetParError(2));
     gv2_fit->SetPointError(ipt, 0,0);
     }
+    cout << gv2_fit->GetPointX(ipt) << ", " << gv2_fit->GetPointY(ipt) << endl;
 
   }
   
