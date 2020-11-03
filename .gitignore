@@ -6,9 +6,28 @@
 *.pcm
 *build*
 
+#job
+jobs
+output
+backup
+
+#scriptfile
+*.sh
+
+#plot
+*.png
+*.pdf
+
 #install
 *install*
 
 #SONIC template
 *template*
 initedFiles*
+
+#MCGlauber
+MCGlauber-*
+
+#outfile
+outfile*
+res
