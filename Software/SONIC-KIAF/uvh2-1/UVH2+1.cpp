@@ -618,7 +618,6 @@ void smeare(double **pe)
 		{
 			if(pe[sx][sy]/pow(AT,4)<SMOOTH)
 			{
-				/*
 				int sx_up = sx+1;
 				int sx_dn = sx-1;
 				int sy_up = sy+1;
@@ -630,12 +629,13 @@ void smeare(double **pe)
 				if (sy_dn < 1)   sy_dn = 1;
 
 				pe[sx][sy] = (pe[sx_up][sy_up]+pe[sx_up][sy]+pe[sx_up][sy_dn]+pe[sx][sy_up]+pe[sx][sy]+pe[sx][sy_dn]+pe[sx_dn][sy_up]+pe[sx_dn][sy]+pe[sx_dn][sy_dn])/9.0;
-				*/
+
+				/*
 				double tmp_e = 0.0, tmp_norm = 0.0;
-				for (int ii=0; ii<5; ii++){
-					for (int jj=0; jj<5; jj++){
-						int sxx = sx - 2 + ii;
-						int syy = sy - 2 + jj;
+				for (int ii=0; ii<3; ii++){
+					for (int jj=0; jj<3; jj++){
+						int sxx = sx - 1 + ii;
+						int syy = sy - 1 + jj;
 
 						if (sxx>NUMT || sxx<1) continue;
 						if (syy>NUMT || syy<1) continue;
@@ -646,7 +646,7 @@ void smeare(double **pe)
 				}//jj
 
 				pe[sx][sy] = tmp_e/tmp_norm;
-
+				*/
 			}
 		}
 }
@@ -658,7 +658,6 @@ void smearu(double ***pu, double **pe)
 		{
 			if(pe[sx][sy]/pow(AT,4)<SMOOTH)
 			{
-				/*
 				int sx_up = sx+1;
 				int sx_dn = sx-1;
 				int sy_up = sy+1;
@@ -670,13 +669,13 @@ void smearu(double ***pu, double **pe)
 
 				pu[0][sx][sy] = (pu[0][sx_up][sy_up]+pu[0][sx_up][sy]+pu[0][sx_up][sy_dn]+pu[0][sx][sy_up]+pu[0][sx][sy]+pu[0][sx][sy_dn]+pu[0][sx_dn][sy_up]+pu[0][sx_dn][sy]+pu[0][sx_dn][sy_dn])/9.0;
 				pu[1][sx][sy] = (pu[1][sx_up][sy_up]+pu[0][sx_up][sy]+pu[1][sx_up][sy_dn]+pu[1][sx][sy_up]+pu[1][sx][sy]+pu[1][sx][sy_dn]+pu[1][sx_dn][sy_up]+pu[1][sx_dn][sy]+pu[1][sx_dn][sy_dn])/9.0;
-				*/
 
+				/*
 				double tmp_u0 = 0.0, tmp_u1 = 0.0, tmp_norm = 0.0;
-				for (int ii=0; ii<5; ii++){
-					for (int jj=0; jj<5; jj++){
-						int sxx = sx - 2 + ii;
-						int syy = sy - 2 + jj;
+				for (int ii=0; ii<3; ii++){
+					for (int jj=0; jj<3; jj++){
+						int sxx = sx - 1 + ii;
+						int syy = sy - 1 + jj;
 
 						if (sxx>NUMT || sxx<1) continue;
 						if (syy>NUMT || syy<1) continue;
@@ -689,6 +688,7 @@ void smearu(double ***pu, double **pe)
 
 				pu[0][sx][sy] = tmp_u0 / tmp_norm;
 				pu[1][sx][sy] = tmp_u1 / tmp_norm;
+				*/
 			}
 		}
 }
@@ -2994,7 +2994,7 @@ void Evolve()
   long int i=0;
   //for (long int i=1;i<=STEPS;i++) 
   //{
-  while((reachedTf==0)&&(wflag==0)&&(t/fmtoGeV*AT<10.0)) 
+  while((reachedTf==0)&&(wflag==0)&&(t/fmtoGeV*AT<15.0)) 
     {
       i++;
       // evolve fields eps forward in time storing updated fields in captial vars

@@ -891,6 +891,29 @@ void snapEDprofile(double time)
   out.close();
 }
 
+void snapEDcontour(double time)
+{
+  fstream out;
+  char fname[255];
+  sprintf(fname,"data/snapshot/EDcontour_%.3f.dat",time/fmtoGeV*AT);
+  out.open(fname, ios::out);
+
+   out << "#x [fm] \t y [fm] \t ED \n";
+  for (int sy=1;sy<=NUMT;sy++)
+    {
+      for (int sx=1;sx<=NUMT;sx++)
+	{
+	  out << (sx-Middle)/fmtoGeV*AT;
+	  out << "\t";
+	  out << (sy-Middle)/fmtoGeV*AT;
+	  out << "\t";
+	  out << e[sx][sy]/AT/AT/AT/AT << "\n";
+	}
+      out << endl;
+    }
+  out.close();
+}
+
 void snapTcontour(double time,gsl_interp_accel *Tacc)
 {
   fstream out;
@@ -1161,6 +1184,7 @@ void snapshot(double tt,gsl_interp_accel *pacc,gsl_interp_accel *cs2acc,gsl_inte
   
   snapTcontour(tt,Tacc);
   snapVcontour(tt);
+  snapEDcontour(tt);
   //snapFOdata(tt,pacc,cs2acc);
 
   snapTprofile(tt,Tacc);   
@@ -1170,7 +1194,7 @@ void snapshot(double tt,gsl_interp_accel *pacc,gsl_interp_accel *cs2acc,gsl_inte
   //snapV2profile(tt);
   //snapV2profile(tt);
   //snapuphiprofile(tt);
-  snappieeprofile(tt);
-  snappirrprofile(tt);
-  snappibulkprofile(tt);
+  //snappieeprofile(tt);
+  //snappirrprofile(tt);
+  //snappibulkprofile(tt);
 }
