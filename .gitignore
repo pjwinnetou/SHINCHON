@@ -1,0 +1,14 @@
+#build
+*.a
+*.o
+*.d
+*.so
+*.pcm
+*build*
+
+#install
+*install*
+
+#SONIC template
+template
+initedFiles*
