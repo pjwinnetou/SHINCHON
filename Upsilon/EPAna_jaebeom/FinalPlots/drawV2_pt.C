@@ -3,11 +3,11 @@
 
 using namespace std;
 
-void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine = false){
+void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, int kDataSel=0, bool isLine = false){
 
   setTDRStyle();
-  writeExtraText= true;
-  int iPeriod = 21;
+  writeExtraText= false;
+  int iPeriod = -1;
   int iPos = 33;
   bool drawInner = true;
 
@@ -19,16 +19,20 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine = false
   if(kInitPos==0) fPosStr = "InitPosZero";
   else if(kInitPos==1) fPosStr = "InitPosGlauber";
   else if(kInitPos==2) fPosStr = "InitPosMean";
+  
+  const int nData = 3;
+  enum fData {CMS_502, CMS_276, STAR_200,};
+  const char* fDataStr[nData] = {"CMS502","CMS276","STAR200"};
 
   const int nPt = 4;
   double ptBin[nPt+1] = {0, 3, 6, 12, 20};
   double exsys[nPt] =  {1.5, 1.5, 3, 4};
   double ptBin_m[nPt] = {1.5, 4.5, 9, 16};
 
-  double ymin = -0.020; double ymax = 0.012; double xmin = 0; double xmax = 20;
+  double ymin = -0.005; double ymax = 0.015; double xmin = 0; double xmax = 20;
 
   //// read input file : value & stat.
-  TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_%s_nRun%d.root",fitor,fPosStr,nrun),"read");
+  TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_%s_%s_nRun%d.root",fitor,fDataStr[kDataSel],fPosStr,nrun),"read");
 
   TH1D* hV2res[nPt];
   TF1* ftot[nPt];
@@ -119,7 +123,7 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine = false
   if(dirf) gSystem->FreeDirectory(dirf);
   else {gSystem->mkdir(savedir.c_str(), kTRUE);}
 
-  c1->SaveAs(Form("%s/v2_vs_pt_isLine%d.pdf",savedir.c_str(),isLine));
+  c1->SaveAs(Form("%s/v2_vs_pt_%s_isLine%d.pdf",savedir.c_str(),fDataStr[kDataSel],isLine));
 
   //Draw Each Fit 
   legposy1 = 0.32; legposy2 = 0.57;
@@ -149,7 +153,7 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine = false
     legf[ipt]->Draw("same");
     drawGlobText("PbPb, #sqrt{s_{NN}} = 5.02 TeV", lab_posx, lab_posy, 1, labtextsize);
     SHINCHONLegend(cf[ipt],iPeriod,iPos,drawInner);
-    cf[ipt]->SaveAs(Form("%s/v2_fit_pt%d.pdf",savedir.c_str(),ipt));
+    cf[ipt]->SaveAs(Form("%s/v2_fit_%s_pt%d.pdf",savedir.c_str(),fDataStr[kDataSel],ipt));
   }
 
 

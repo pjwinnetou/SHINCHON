@@ -6,8 +6,8 @@ using namespace std;
 void drawV2_pt_compare_data(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine = true){
 
   setTDRStyle();
-  writeExtraText= true;
-  int iPeriod = 21;
+  writeExtraText= false;
+  int iPeriod = -1;
   int iPos = 33;
   bool drawInner = true;
 
@@ -28,8 +28,8 @@ void drawV2_pt_compare_data(int fitor = 3, int nrun = 10, int kInitPos=1, bool i
 
   //// read input file : value & stat.
   // Fit value
-  TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_%s_nRun%d.root",fitor,fPosStr,nrun),"read");
-  TFile *fsv = new TFile(Form("../res/SavedPlots_%s_nRun%d.root",fPosStr,nrun),"read");
+  TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_CMS502_%s_nRun%d.root",fitor,fPosStr,nrun),"read");
+  TFile *fsv = new TFile(Form("../res/SavedPlots_CMS502_%s_nRun%d.root",fPosStr,nrun),"read");
 
   TF1* ftot[nPt];
 
@@ -122,7 +122,7 @@ void drawV2_pt_compare_data(int fitor = 3, int nrun = 10, int kInitPos=1, bool i
   if(dirf) gSystem->FreeDirectory(dirf);
   else {gSystem->mkdir(savedir.c_str(), kTRUE);}
 
-  c1->SaveAs(Form("%s/compare_v2_vs_pt_data_isLine%d.pdf",savedir.c_str(),isLine));
+  c1->SaveAs(Form("%s/compare_v2_vs_pt_data_CMS502_isLine%d.pdf",savedir.c_str(),isLine));
 
 	return;
 } 

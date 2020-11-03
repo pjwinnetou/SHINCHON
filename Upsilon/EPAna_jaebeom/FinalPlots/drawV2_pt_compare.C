@@ -3,11 +3,11 @@
 
 using namespace std;
 
-void drawV2_pt_compare(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine = true){
+void drawV2_pt_compare(int fitor = 3, int nrun = 10, int kInitPos=1, int kDataSel=0,bool isLine = true){
 
   setTDRStyle();
-  writeExtraText= true;
-  int iPeriod = 21;
+  writeExtraText= false;
+  int iPeriod = -1;
   int iPos = 33;
   bool drawInner = true;
 
@@ -18,18 +18,22 @@ void drawV2_pt_compare(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine
   if(kInitPos==0) fPosStr = "InitPosZero";
   else if(kInitPos==1) fPosStr = "InitPosGlauber";
   else if(kInitPos==2) fPosStr = "InitPosMean";
+  
+  const int nData = 3;
+  enum fData {CMS_502, CMS_276, STAR_200,};
+  const char* fDataStr[nData] = {"CMS502","CMS276","STAR200"};
 
   const int nPt = 4;
   double ptBin[nPt+1] = {0, 3, 6, 12, 20};
   double exsys[nPt] =  {1.5, 1.5, 3, 4};
   double ptBin_m[nPt] = {1.5, 4.5, 9, 16};
 
-  double ymin = -0.020; double ymax = 0.021; double xmin = 0; double xmax = 20;
+  double ymin = -0.005; double ymax = 0.023; double xmin = 0; double xmax = 20;
 
   //// read input file : value & stat.
   // Fit value
-  TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_%s_nRun%d.root",fitor,fPosStr,nrun),"read");
-  TFile *fsv = new TFile(Form("../res/SavedPlots_%s_nRun%d.root",fPosStr,nrun),"read");
+  TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_%s_%s_nRun%d.root",fitor,fDataStr[kDataSel],fPosStr,nrun),"read");
+  TFile *fsv = new TFile(Form("../res/SavedPlots_%s_%s_nRun%d.root",fDataStr[kDataSel],fPosStr,nrun),"read");
 
   TF1* ftot[nPt];
 
@@ -158,7 +162,7 @@ void drawV2_pt_compare(int fitor = 3, int nrun = 10, int kInitPos=1, bool isLine
   if(dirf) gSystem->FreeDirectory(dirf);
   else {gSystem->mkdir(savedir.c_str(), kTRUE);}
 
-  c1->SaveAs(Form("%s/compare_v2_vs_pt_cos2Pi_isLine%d.pdf",savedir.c_str(),isLine));
+  c1->SaveAs(Form("%s/compare_v2_vs_pt_cos2Pi_%s_isLine%d.pdf",savedir.c_str(),fDataStr[kDataSel],isLine));
 
 	return;
 } 

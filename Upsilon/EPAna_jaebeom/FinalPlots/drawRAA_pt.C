@@ -3,11 +3,11 @@
 
 using namespace std;
 
-void drawRAA_pt(int nrun = 10, int kInitPos=1, bool isLine = true){
+void drawRAA_pt(int nrun = 10, int kInitPos=1, int kDataSel=0, bool isLine = true){
 
   setTDRStyle();
-  writeExtraText= true;
-  int iPeriod = 21;
+  writeExtraText= false;
+  int iPeriod = -1;
   int iPos = 33;
   bool drawInner = true;
 
@@ -20,6 +20,10 @@ void drawRAA_pt(int nrun = 10, int kInitPos=1, bool isLine = true){
   else if(kInitPos==1) fPosStr = "InitPosGlauber";
   else if(kInitPos==2) fPosStr = "InitPosMean";
 
+  const int nData = 3;
+  enum fData {CMS_502, CMS_276, STAR_200,};
+  const char* fDataStr[nData] = {"CMS502","CMS276","STAR200"};
+
   const int nPt = 4;
   double ptBin[nPt+1] = {0, 3, 6, 12, 20};
   double exsys[nPt] =  {1.5, 1.5, 3, 4};
@@ -28,7 +32,7 @@ void drawRAA_pt(int nrun = 10, int kInitPos=1, bool isLine = true){
   double ymin = 0; double ymax = 1.0; double xmin = 0; double xmax = 20;
 
   //// read input file : value & stat.
-  TFile* rf = new TFile(Form("../res/SavedPlots_%s_nRun%d.root",fPosStr,nrun),"read");
+  TFile* rf = new TFile(Form("../res/SavedPlots_%s_%s_nRun%d.root",fDataStr[kDataSel],fPosStr,nrun),"read");
   TH1D* hPtNum = (TH1D*) rf->Get("hPt_allEvt_EPGlauber");
   TH1D* hPtDen = (TH1D*) rf->Get("hPt_allEvt_noRAA_EPGlauber");
   TH1D* hRAA_pt = (TH1D*) hPtNum->Clone("hRAA_pt");
@@ -104,7 +108,7 @@ void drawRAA_pt(int nrun = 10, int kInitPos=1, bool isLine = true){
   if(dirf) gSystem->FreeDirectory(dirf);
   else {gSystem->mkdir(savedir.c_str(), kTRUE);}
 
-  c1->SaveAs(Form("%s/RAA_vs_pt_isLine%d.pdf",savedir.c_str(),isLine));
+  c1->SaveAs(Form("%s/RAA_vs_pt_%s_isLine%d.pdf",savedir.c_str(),fDataStr[kDataSel],isLine));
 
   return;
 

@@ -580,7 +580,7 @@ void makeUpsTree(const int kInitPos = 1){
       TLorentzVector* Ups4VGlauberCor = new TLorentzVector;
       Ups4VRaw->SetPtEtaPhiM(pT,0,phi,const_mY);
       Ups4VEnProfCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangEnProf, Ups4VRaw->M());
-      Ups4VGlauberCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangGlauberh + TMath::Pi()/2, Ups4VRaw->M());
+      Ups4VGlauberCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangGlauberh, Ups4VRaw->M());
       new((*Ups4momRaw)[nUps])TLorentzVector(*Ups4VRaw);
       new((*Ups4momEnProfCor)[nUps])TLorentzVector(*Ups4VEnProfCor);
       new((*Ups4momGlauberCor)[nUps])TLorentzVector(*Ups4VGlauberCor);
