@@ -13,13 +13,18 @@
 
 using namespace std;
 
-void makePlots(int nrun= 10, int kInitPos = 1)
+void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
 {
   const char* fPosStr;
   if(kInitPos==0) fPosStr = "InitPosZero";
   else if(kInitPos==1) fPosStr = "InitPosGlauber";
   else if(kInitPos==2) fPosStr = "InitPosMean";
-  TFile* rf = new TFile(Form("outfile_UpsSkim_%s_0000_%04d.root",fPosStr,nrun),"read");
+  
+  const int nData = 3;
+  enum fData {CMS_502, CMS_276, STAR_200,};
+  const char* fDataStr[nData] = {"CMS502","CMS276","STAR200"};
+
+  TFile* rf = new TFile(Form("outfile_UpsSkim_%s_%s_0000_%04d.root",fDataStr[kDataSel],fPosStr,nrun),"read");
   TTree* tree = (TTree*) rf->Get("tree");
   if(nrun!= tree->GetEntries()){cout << "ERROR!! :::: Number of entries and runs inconsistent!!" << endl;return;}
 
@@ -27,7 +32,9 @@ void makePlots(int nrun= 10, int kInitPos = 1)
   void * dirf = gSystem->OpenDirectory(savedir.c_str());
   if(dirf) gSystem->FreeDirectory(dirf);
   else {gSystem->mkdir(savedir.c_str(), kTRUE);}
-  TFile* wf = new TFile(Form("%s/SavedPlots_%s_nRun%d.root",savedir.c_str(),fPosStr,nrun),"recreate");
+
+
+  TFile* wf = new TFile(Form("%s/SavedPlots_%s_%s_nRun%d.root",savedir.c_str(),fDataStr[kDataSel],fPosStr,nrun),"recreate");
 
   SetTree settree_;
   settree_.TreeSetting(tree);

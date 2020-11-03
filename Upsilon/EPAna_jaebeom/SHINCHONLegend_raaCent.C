@@ -84,6 +84,11 @@ void SHINCHONLegend_raaCent( TPad* pad, int iPeriod, int iPosX)
     {
       lumiText += lumi_sqrtS;
     }
+  else if ( iPeriod==-1 )
+    {
+      lumiText += lumi_sqrtS;
+      shinchonText = "";
+    }
    
   std::cout << lumiText << endl;
 

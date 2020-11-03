@@ -88,6 +88,11 @@ void SHINCHONLegend( TPad* pad, int iPeriod, int iPosX , bool isInner)
   else if ( iPeriod==0 )
     {
       lumiText += lumi_sqrtS;
+    } 
+  else if ( iPeriod==-1 )
+    {
+      lumiText += lumi_sqrtS;
+      shinchonText ="";
     }
    
   std::cout << lumiText << endl;
