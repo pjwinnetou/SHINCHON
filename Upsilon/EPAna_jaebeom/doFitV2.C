@@ -55,16 +55,20 @@ Double_t CompOrd3(Double_t *x, Double_t *p)
 } 
 
 
-void doFitV2(int nrun = 10, int InitPos=1, const int fitorder = 3)
+void doFitV2(int nrun = 10, int InitPos=1, const int fitorder = 3, int kDataSel = 2)
 {
   const char* initPosStr;
   if(InitPos==0) initPosStr = "InitPosZero";
   else if(InitPos==1) initPosStr = "InitPosGlauber";
   else if(InitPos==2) initPosStr = "InitPosMean";
 
-  TFile* rf = new TFile(Form("res/SavedPlots_%s_nRun%d.root",initPosStr,nrun),"read");
+  const int nData = 3;
+  enum fData {CMS_502, CMS_276, STAR_200,};
+  const char* fDataStr[nData] = {"CMS502","CMS276","STAR200"};
 
-  TFile* wf = new TFile(Form("res/FitResults_v2_fitorder%d_%s_nRun%d.root",fitorder,initPosStr,nrun),"recreate");
+  TFile* rf = new TFile(Form("res/SavedPlots_%s_%s_nRun%d.root",fDataStr[kDataSel],initPosStr,nrun),"read");
+
+  TFile* wf = new TFile(Form("res/FitResults_v2_fitorder%d_%s_%s_nRun%d.root",fitorder,fDataStr[kDataSel],initPosStr,nrun),"recreate");
 
   const int nPt = 4;
   TH1D* hPhiPt[nPt];
