@@ -767,9 +767,11 @@ void runAndOutputLemonTree(const Int_t n,
   Float_t     lemonxproj[lemonmaxNucleons];  // x,y,z coordinates for all nucleons
   Float_t     lemonyproj[lemonmaxNucleons];  // note these must be in the global coordinate frame
   Float_t     lemonzproj[lemonmaxNucleons];
+	Bool_t     	lemonwproj[lemonmaxNucleons];
   Float_t     lemonxtarg[lemonmaxNucleons];  // x,y,z coordinates for all nucleons
   Float_t     lemonytarg[lemonmaxNucleons];  // note these must be in the global coordinate frame
   Float_t     lemonztarg[lemonmaxNucleons];
+	Bool_t     	lemonwtarg[lemonmaxNucleons];
   
   TTree *lemon = new TTree("lemon","lemon");
   lemon->Branch("npart",&lemonnpart,"npart/I");
@@ -784,15 +786,18 @@ void runAndOutputLemonTree(const Int_t n,
   lemon->Branch("xproj",lemonxproj,"xproj[500]/F");
   lemon->Branch("yproj",lemonyproj,"yproj[500]/F");
   lemon->Branch("zproj",lemonyproj,"zproj[500]/F");  
+  lemon->Branch("wproj",lemonwproj,"wproj[500]/O");  
   lemon->Branch("xtarg",lemonxtarg,"xtarg[500]/F");
   lemon->Branch("ytarg",lemonytarg,"ytarg[500]/F");
   lemon->Branch("ztarg",lemonytarg,"ztarg[500]/F");    
+  lemon->Branch("wtarg",lemonwtarg,"wtarg[500]/O");  
   lemon->SetDirectory(out);
 
-  const Int_t NSAMP = 100;
+	const Int_t NSAMP = 100;
   TF1 *rad = new TF1("rad","x*TMath::Exp(-x*x/(2.*[0]*[0]))",0.0,3*sigs);
   rad->SetParameter(0,sigs);
-  TF2* smearing_function = new TF2("smear_tf2", "TMath::Exp(-(x*x+y*y)/(2.*[0]*[0]))/(2*TMath::Pi()*[0]*[0])", 0, 10*sigs, 0, 10*sigs);
+  //TF2* smearing_function = new TF2("smear_tf2", "TMath::Exp(-(x*x+y*y)/(2.*[0]*[0]))/(2*TMath::Pi()*[0]*[0])", 0, 10*sigs, 0, 10*sigs);
+  TF2* smearing_function = new TF2("smear_tf2", "TMath::Exp(-(x*x+y*y)/(2.*[0]*[0]))/(2*TMath::Pi()*[0]*[0])", -100*sigs, 100*sigs, -100*sigs, 100*sigs);
   smearing_function->SetParameter(0,sigs);
   
   for (Int_t ievent=0; ievent<n; ++ievent) {
@@ -915,12 +920,14 @@ void runAndOutputLemonTree(const Int_t n,
       lemonxproj[i] = nucleonA->GetX();
       lemonyproj[i] = nucleonA->GetY();
       lemonzproj[i] = nucleonA->GetZ();      
+			lemonwproj[i] = nucleonA->IsWounded();
     }
     for (Int_t i = 0; i<BN; ++i) {
       TGlauNucleon *nucleonB=(TGlauNucleon*)(nucleonsB->At(i));
       lemonxtarg[i] = nucleonB->GetX();
       lemonytarg[i] = nucleonB->GetY();
       lemonztarg[i] = nucleonB->GetZ();      
+			lemonwtarg[i] = nucleonB->IsWounded();
     }
     
     lemon->Fill();
@@ -931,10 +938,11 @@ void runAndOutputLemonTree(const Int_t n,
 
     if (ogrid) {
 
-      const Int_t nbins = 100; 
+			//const Int_t nbins = 150; 
+			const Int_t nbins = 100; 
       const Int_t nbinsx = nbins;
       const Int_t nbinsy = nbins;
-      const Double_t max_x = 10.0;
+      const Double_t max_x = 15.0;
       
       // now create an energy density distribution (a.u.)
       TH2D* inited_hist = new TH2D(Form("inited_event%i",ievent), ";x;y;E [a.u.]", nbinsx, -max_x, max_x, nbinsy, -max_x, max_x);
