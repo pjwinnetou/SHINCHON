@@ -1,6 +1,6 @@
 include madai_repo/makefile_defs.mk
 
-HPM = -I${MADAI_INSTALLDIR}/include/madai -I${MADAI_GSLPATH}/include -I/usr/include/hdf5/serial -L${MADAI_GSLPATH}/lib -L${MADAI_INSTALLDIR}/lib/madai -L/usr/lib/x86_64-linux-gnu/hdf5/serial
+HPM = -I${MADAI_INSTALLDIR}/include/madai -I${MADAI_GSLPATH}/include -I${MADAI_HDF5_HOME}/include -L${MADAI_GSLPATH}/lib -L${MADAI_INSTALLDIR}/lib/madai -L${MADAI_HDF5_HOME}/lib
 PROGDATA=${MADAI_INSTALLDIR}/progdata/madai
 
 all : b3d analyze

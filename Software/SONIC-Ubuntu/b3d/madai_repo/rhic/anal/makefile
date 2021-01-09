@@ -23,7 +23,7 @@ install : ${MADAI_INSTALLDIR}/lib/madai/libanalyze.a ${MADAI_INSTALLDIR}/include
 clean :
 	rm -f lib/libanalyze.a build/*.o include/*.h
 
-INC=-I include -I ${MADAI_GSLPATH}/include -I ${MADAI_INSTALLDIR}/include/madai -I /usr/include/hdf5/serial 
+INC=-I include -I ${MADAI_GSLPATH}/include -I ${MADAI_INSTALLDIR}/include/madai -I ${MADAI_HDF5_HOME}/include 
 
 uninstall :
 	rm -f ${MADAI_INSTALLDIR}/lib/madai/libanalyze.a ${MADAI_INSTALLDIR}/include/madai/analyze.h
