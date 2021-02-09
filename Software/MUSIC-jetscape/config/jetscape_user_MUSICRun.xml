@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<jetscape>
+    <!-- General settings -->
+    <nEvents> 1 </nEvents>
+    <debug> on </debug>
+
+    <!-- fix the random seed -->
+    <Random>
+        <seed>0</seed>
+    </Random>
+
+    <!-- Inital State Module  -->
+    <IS>
+	    <Trento> </Trento>
+	    <!--initial_profile_path>../input/initedFiles_PbPb_5020GeV_b0_18fm_scaler024_bin100</initial_profile_path-->
+    </IS>
+   
+
+ <!--Preequilibrium Dynamics Module -->
+    <Preequilibrium>
+        <NullPreDynamics> </NullPreDynamics>
+    </Preequilibrium>
+ 
+  <Hydro>
+
+    <MUSIC>
+      <name>MUSIC</name>
+      <MUSIC_input_file>music_input</MUSIC_input_file>
+      <freezeout_temperature>0.130</freezeout_temperature>
+    </MUSIC>
+
+
+  </Hydro>
+
+</jetscape>
