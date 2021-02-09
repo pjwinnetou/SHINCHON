@@ -21,6 +21,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <dirent.h>
+#include <memory>
+#include <cstddef>
 
 using namespace std;
 
@@ -163,14 +167,28 @@ void makeUpsTree(const int kInitPos = 1){
 
   //return;
 
+  double phiN_ = 2;
+
   //Glauber
   const int Necc = 10;
   const int nNucl = 500;
-  TFile *infileGlauber = new TFile("../MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
+  
+  string GlbFileName ("MCGlauber-PbPb-5020GeV-b0-18fm-bin100-v3.root");
+  int nNucl_proj = -1;
+  int nNucl_targ = -1;
+  if(GlbFileName.find("PbPb") != string::npos){nNucl_proj=208; nNucl_targ=208;}
+  else if(GlbFileName.find("pPb") != string::npos){nNucl_proj=1; nNucl_targ=208;}
+  else if(GlbFileName.find("AuAu") != string::npos){nNucl_proj=197; nNucl_targ=197;}
+  else if(GlbFileName.find("dAu") != string::npos){nNucl_proj=2; nNucl_targ=197;}
+  else if(GlbFileName.find("OO") != string::npos){nNucl_proj=16; nNucl_targ=16;}
+  else if(GlbFileName.find("pO") != string::npos){nNucl_proj=1; nNucl_targ=16;}
+
+  TFile *infileGlauber = new TFile(Form("../%s",GlbFileName.c_str()),"read");
   TTree *TGlauber = (TTree*)infileGlauber->Get("lemon");
   int Gnpart, Gncoll;
   float b, eccgaus[Necc], eccpoint[Necc];
   float xproj[nNucl], yproj[nNucl], xtarg[nNucl], ytarg[nNucl];
+  Bool_t wproj[nNucl], wtarg[nNucl]; 
   TGlauber->SetBranchAddress("npart",&Gnpart);
   TGlauber->SetBranchAddress("ncoll",&Gncoll);
   TGlauber->SetBranchAddress("b",&b);
@@ -180,6 +198,9 @@ void makeUpsTree(const int kInitPos = 1){
   TGlauber->SetBranchAddress("yproj",yproj);
   TGlauber->SetBranchAddress("xtarg",xtarg);
   TGlauber->SetBranchAddress("ytarg",ytarg);
+  TGlauber->SetBranchAddress("wproj",wproj);
+  TGlauber->SetBranchAddress("wtarg",wtarg);
+
 
   //QGP T profile
   TH2D *hTHydro[300];
@@ -227,7 +248,7 @@ void makeUpsTree(const int kInitPos = 1){
   if(kInitPos==0) fInitPos = "InitPosZero";
   else if(kInitPos==1) fInitPos = "InitPosGlauber";
   else if(kInitPos==2) fInitPos = "InitPosMean";
-  TFile *outfile = new TFile(Form("./outfile_UpsSkim_%s_%04d_%04d.root",fInitPos.c_str(),run_i,run_f),"recreate");
+  TFile *outfile = new TFile(Form("./outfile_UpsSkim_PhiAng%.f_%s_%04d_%04d.root",phiN_,fInitPos.c_str(),run_i,run_f),"recreate");
 
   static const long MAXTREESIZE = 1000000000;
   static const long MaxUpsSize = 200000;
@@ -271,10 +292,14 @@ void makeUpsTree(const int kInitPos = 1){
   //Initial pT distribution from JJS
   TF1 *fInitialUpsilon = new TF1("fInitialUpsilon",fTsallis1S_v2,0,30,3);
   fInitialUpsilon -> SetParameters(  1.06450e+00 ,  7.97649e-01 , 100);
-  
+ 
   //Glauber smearing function  
-  TF2* smearing_function = new TF2("smear_tf2", "TMath::Exp(-(x*x+y*y)/(2.*[0]*[0]))/(2*TMath::Pi()*[0]*[0])", 0, 10*sigs, 0, 10*sigs);
+  TF2* smearing_function = new TF2("smear_tf2", "TMath::Exp(-(x*x+y*y)/(2.*[0]*[0]))/(2*TMath::Pi()*[0]*[0])", -100*sigs, 100*sigs, -100*sigs, 100*sigs);
   smearing_function->FixParameter(0,sigs);
+
+  const Double_t max_x = 15.0;
+  const int nSliceGlb = 300;
+  TH2D* hist_glauber_fine[nrun];
 
 
   for (int irun=run_i; irun<run_f; irun++){
@@ -306,7 +331,8 @@ void makeUpsTree(const int kInitPos = 1){
     b_ = b;
     for(int iecc=0;iecc<Necc;iecc++){eccgaus_[iecc] = eccgaus[iecc]; eccpoint_[iecc] = eccpoint[iecc];}
 
-    TH2D *hGlauber = (TH2D*)infileGlauber->Get(Form("inited_event%d",irun));
+
+    TH2D* hGlauber = (TH2D*)infileGlauber->Get(Form("inited_event%d",irun));
 
     //Load histograms
     for (int it=0; it<ntimeHydro; it++){
@@ -331,38 +357,37 @@ void makeUpsTree(const int kInitPos = 1){
         else if(bcx>0 && bcy<=0) phiAng = -TMath::ATan(abs(bcy/bcx));
         else{cout << "ERROR : no phi angle calculation " << endl; return;}
         double bcw = TMath::Power(hTHydro[ntimeHydro-1]->GetBinContent(ibinx,ibiny),0.25);
-        sumSinEnProf += bcw * TMath::Sin(2*phiAng);
-        sumCosEnProf += bcw * TMath::Cos(2*phiAng);
+        sumSinEnProf += bcw * TMath::Sin(phiN_*phiAng);
+        sumCosEnProf += bcw * TMath::Cos(phiN_*phiAng);
         hTempEnergy[irun]->Fill(bcx,bcy,bcw);
       }
     }
-    EPangEnProf = 0.5 * TMath::ATan(sumSinEnProf/sumCosEnProf);
+    EPangEnProf = 1./phiN_ * TMath::ATan(sumSinEnProf/sumCosEnProf);
 
 
 
     //EP angle from Glauber 
-    double lowcut = 10e-5; double highcut = 10000;
-    const Double_t max_x = 15.0;
-    const int nSliceGlb = 300;
+    hist_glauber_fine[irun] = new TH2D(Form("hist_glauber_fineBins_irun%d",irun),";x;y",nSliceGlb, -max_x, max_x, nSliceGlb, -max_x, max_x);
     double sumSinGlb = 0; double sumCosGlb=0;
 
     if(!(Gncoll>0)){cout << "No Ncoll event!! " << endl; continue;}
-    for(int islx = 0; islx<nSliceGlb;islx++){
-      double xval_ = -max_x + max_x/nSliceGlb + 2*max_x/nSliceGlb*islx;
-      for(int isly=0; isly<nSliceGlb;isly++){
+    for(int isly=0; isly<nSliceGlb;isly++){
+      for(int islx = 0; islx<nSliceGlb;islx++){
+        double xval_ = -max_x + max_x/nSliceGlb + 2*max_x/nSliceGlb*islx;
         double yval_ = -max_x + max_x/nSliceGlb + 2*max_x/nSliceGlb*isly;
         long double content=0;
 
         for(int in=0; in<nNucl; in++){
-          if(xproj[in]==0 || yproj[in]==0 || abs(xproj[in])<lowcut || abs(xproj[in])>highcut || abs(yproj[in])<lowcut || abs(yproj[in]) > highcut) continue;
+          if(wproj[in]==0) continue;
+          if(in >= nNucl_proj) continue;
           content += smearing_function->Eval(xproj[in] - xval_, yproj[in] - yval_);
         }
 
         for(int in=0; in<nNucl; in++){
-          if(xtarg[in]==0 || ytarg[in]==0 || abs(xtarg[in])<lowcut || abs(xtarg[in])>highcut || abs(ytarg[in])<lowcut || abs(ytarg[in]) > highcut) continue;
+          if(wtarg[in]==0) continue;
+          if(in >= nNucl_targ) continue;
           content += smearing_function->Eval(xtarg[in] - xval_, ytarg[in] - yval_);
         }
-
 
         double phiAng;
         if(xval_==0) phiAng=0;
@@ -372,12 +397,11 @@ void makeUpsTree(const int kInitPos = 1){
         else if(xval_>0 && yval_<=0) phiAng = -TMath::ATan(abs(yval_/xval_));
         else{cout << "ERROR : no phi angle calculation " << endl; return;}
 
-        sumCosGlb += content*TMath::Cos(2*phiAng);
-        sumSinGlb += content*TMath::Sin(2*phiAng);
-
+        sumCosGlb += content*TMath::Cos(phiN_*phiAng);
+        sumSinGlb += content*TMath::Sin(phiN_*phiAng);
       }
     }
-    EPangGlauber  = 0.5 * TMath::ATan(sumSinGlb/sumCosGlb);
+    EPangGlauber  = 1./phiN_ * TMath::ATan(sumSinGlb/sumCosGlb);
    
 
 
@@ -397,21 +421,22 @@ void makeUpsTree(const int kInitPos = 1){
         else if(bcx>0 && bcy<=0) phiAng = -TMath::ATan(abs(bcy/bcx));
         else{cout << "ERROR : no phi angle calculation " << endl; return;}
         double bcw = hGlauber->GetBinContent(ibinx,ibiny);
-        sumSinGlbh += bcw * TMath::Sin(2*phiAng);
-        sumCosGlbh += bcw * TMath::Cos(2*phiAng);
+        sumSinGlbh += bcw * TMath::Sin(phiN_*phiAng);
+        sumCosGlbh += bcw * TMath::Cos(phiN_*phiAng);
       }
     }
-    EPangGlauberh = 0.5 * TMath::ATan(sumSinGlbh/sumCosGlbh);
+    EPangGlauberh = 1./phiN_ * TMath::ATan(sumSinGlbh/sumCosGlbh);
 
     cout << "EP Angle (Energy density profile) : " << EPangEnProf << endl;
     cout << "EP Angle (Glauber fine bins) : " << EPangGlauber << endl;
     cout << "EP Angle (Glauber hist) : " << EPangGlauberh << endl;
 
+    
+    //Upsilon
 		const int nY = nSAMP * Gncoll;
     cout << "nY : " << nY << endl;
     cout << endl;
 
-    //Upsilon
     for (int iY=0; iY<nY; iY++){
 
       //Momentum
@@ -580,7 +605,7 @@ void makeUpsTree(const int kInitPos = 1){
       TLorentzVector* Ups4VGlauberCor = new TLorentzVector;
       Ups4VRaw->SetPtEtaPhiM(pT,0,phi,const_mY);
       Ups4VEnProfCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangEnProf, Ups4VRaw->M());
-      Ups4VGlauberCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangGlauberh, Ups4VRaw->M());
+      Ups4VGlauberCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangGlauber, Ups4VRaw->M());
       new((*Ups4momRaw)[nUps])TLorentzVector(*Ups4VRaw);
       new((*Ups4momEnProfCor)[nUps])TLorentzVector(*Ups4VEnProfCor);
       new((*Ups4momGlauberCor)[nUps])TLorentzVector(*Ups4VGlauberCor);
