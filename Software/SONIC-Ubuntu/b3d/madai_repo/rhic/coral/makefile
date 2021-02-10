@@ -13,7 +13,7 @@ HDF5PATH=${MADAI_HDF5_HOME}
 #e.g. /usr/local
 #################################################
 
-INC=-I ${GSLPATH}/include -I /usr/include/hdf5/serial -I include
+INC=-I ${GSLPATH}/include -I ${MADAI_HDF5_HOME}/include -I include
 
 all: coraldirs lib/libcoralutils.a lib/libcoral.a lib/libxgraph.a
 

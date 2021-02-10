@@ -7,7 +7,7 @@ include ../../makefile_defs.mk
 #########################################################################
 #HOPEFULLY, everything below need not be touched
 
-INC=-I include -I${MADAI_GSLPATH}/include -I${MADAI_INSTALLDIR}/include/madai -I/usr/include/hdf5/serial -I${MADAI_GSLPATH}/include
+INC=-I include -I${MADAI_GSLPATH}/include -I${MADAI_INSTALLDIR}/include/madai -I${MADAI_HDF5_HOME}/include -I${MADAI_GSLPATH}/include
 
 LB=-L${MADAI_INSTALLDIR}/lib/madai -L${MADAI_GSLPATH}/lib -lcoralutils -lgsl -lgslcblas
 

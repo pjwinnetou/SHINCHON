@@ -36,7 +36,7 @@ installdirs :
 clean :
 	rm -f lib/libb3d.a build/*.o include/*.h
 
-INC=-I include -I ${GSLPATH}/include -I${CORAL_INCLUDE} -I /usr/include/hdf5/serial 
+INC=-I include -I ${GSLPATH}/include -I${CORAL_INCLUDE} -I ${MADAI_HDF5_HOME}/include 
 
 uninstall :
 	rm -f ${INSTALLDIR}/lib/madailibb3d.a ${INSTALLDIR}/include/madai/b3d.h ${INSTALLDIR}/include/madai/hydrotob3d.h ${INSTALLDIR}/include/madai/resonances.h ${INSTALLDIR}/include/madai/bjmaker.h ${INSTALLDIR}/include/madai/inelastic.h \
