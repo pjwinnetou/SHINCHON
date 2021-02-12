@@ -10,11 +10,10 @@ using namespace std;
 
 CB3D::CB3D(){
 	randy=new CRandom(-1234);
-	res_ranptr=new CRandom(-1234);
 	BJORKEN=false;
 };
 
-CB3D::CB3D(string run_name_set, int ithread_set){
+CB3D::CB3D(string run_name_set){
 	run_name=run_name_set;
 	string parsfilename,dirname;
 	dirname="parameters/"+run_name;
@@ -66,8 +65,8 @@ CB3D::CB3D(string run_name_set, int ithread_set){
 	DETA=ETAMAX/double(NETA);
 	int jx,jy,jeta;
 	CB3DCell *c;
-	// CB3DCell::b3d=this;
-	// CPart::b3d=this;
+	CB3DCell::b3d=this;
+	CPart::b3d=this;
 	if(OSUHYDRO){
 		osuhydrotob3d=new COSUHydrotoB3D();
 		osuhydrotob3d->b3d=this;
@@ -79,8 +78,8 @@ CB3D::CB3D(string run_name_set, int ithread_set){
 		hydrotob3d->initialization=false;
 	}
 	bjmaker.b3d=this;
-	// CResList::b3d=this;
-	// CInelasticList::b3d=this;
+	CResList::b3d=this;
+	CInelasticList::b3d=this;
 	CInelasticList::UseFile = false;
 	CInelasticList::UseInelasticArray = false;
 	tau=0.0;
@@ -103,7 +102,7 @@ CB3D::CB3D(string run_name_set, int ithread_set){
 			for(ieta=0;ieta<2*NETA;ieta++){
 				etamin=-ETAMAX+DETA*ieta;
 				etamax=etamin+DETA;
-				cell[ix][iy][ieta]=new CB3DCell(xmin,xmax,ymin,ymax,etamin,etamax, this);
+				cell[ix][iy][ieta]=new CB3DCell(xmin,xmax,ymin,ymax,etamin,etamax);
 			}
 		}
 	}
@@ -152,24 +151,23 @@ CB3D::CB3D(string run_name_set, int ithread_set){
 			}
 		}
 	}
-	randy=new CRandom(-1234-ithread_set);
-	res_ranptr = new CRandom(-1234 - ithread_set);
+	randy=new CRandom(-1234);
 	// create particle objects, and put into deadpartmap
 	int ipart;
 	partarray=new CPart *[NPARTSMAX];
 	for(ipart=0;ipart<NPARTSMAX;ipart++){
-		partarray[ipart]=new CPart(this);
+		partarray[ipart]=new CPart();
 	}
 	// create array of action objects
 	int iaction;
-	// CAction::b3d=this;
+	CAction::b3d=this;
 	actionarray=new CAction *[NACTIONSMAX];
 	for(iaction=0;iaction<NACTIONSMAX;iaction++){
-		actionarray[iaction]=new CAction(this);
+		actionarray[iaction]=new CAction();
 	}
 
-	reslist=new CResList(this);
-	if(INELASTIC) inelasticlist = new CInelasticList(this);
+	reslist=new CResList();
+	if(INELASTIC) inelasticlist = new CInelasticList();
 	oscarfile=NULL;
 	h5infile=NULL;
 	h5outfile=NULL;
@@ -214,7 +212,6 @@ CB3D::CB3D(string run_name_set, int ithread_set){
 }
 
 void CB3D::InitArrays(){
-
 	int ipart,alpha;
 	PartMap.clear();
 	DeadPartMap.clear();
@@ -255,7 +252,6 @@ void CB3D::InitArrays(){
 }
 
 void CB3D::SetQualifier(string qualifier_set){
-
 	ievent_write=ievent_read=0;
 	qualifier=qualifier_set;
 	if(h5outfile!=NULL) delete h5outfile;
@@ -313,7 +309,6 @@ void CB3D::SetQualifier(string qualifier_set){
 }
 
 int CB3D::ReadDataH5(int ievent){
-
 	KillAllActions();
 	nactions=0;
 	KillAllParts();
@@ -351,7 +346,6 @@ int CB3D::ReadDataH5(int ievent){
 }
 
 void CB3D::MovePartsToFinalMap(){
-
 	CPart *part;
 	CPartMap::iterator ppos,pppos;
 	CB3DCell *c;
@@ -392,7 +386,6 @@ void CB3D::MovePartsToFinalMap(){
 }
 
 double CB3D::WriteDataH5(){
-
 	double v,pperp,eperp,e,dnchdeta=0.0,dnchdy=0,twrite,t,tauwrite,eta,etawrite,deleta,y;
 	int ipart,nmesons=0,nch=0;
 	CPart *part;
@@ -446,8 +439,6 @@ double CB3D::WriteDataH5(){
 	}
 	if(int(DeadPartMap.size())!=NPARTSMAX){
 		printf("some particles still out there\n");
-		cout << "DeadPartMap.size() = " << int(DeadPartMap.size()) << ".\n";
-		cout << "NPARTSMAX = " << NPARTSMAX << ".\n";
 		exit(1);
 	}
 
@@ -476,7 +467,8 @@ double CB3D::WriteOSCAR(){
 	else{
 		oscarfile=fopen(oscarfilename.c_str(),"a");
 	}
-	int nparts=PartMap.size()+FinalPartMap.size();
+	//int nparts=PartMap.size()+FinalPartMap.size();
+	int nparts=int(FinalPartMap.size());
 	fprintf(oscarfile,"%7d %6d    %8.5f     %8.5f\n",ievent_write,nparts,parameter::getD(parmap,"GLAUBER_B",0.0),parameter::getD(parmap,"GLAUBER_B",0.0));
 	double v,pperp,eperp,dnchdeta=0.0,dnchdy=0,t,twrite,tauwrite,etawrite,eta,deleta,y,rwrite[4],pwrite[4],mass;
 	int ipart,nmesons=0,nch=0;
@@ -484,8 +476,9 @@ double CB3D::WriteOSCAR(){
 	CPartMap::iterator ppos;
 	ipart=0;
 	ppos=FinalPartMap.begin();
-	do{
-		if(ppos==FinalPartMap.end()) ppos=PartMap.begin();
+	while(ppos!=FinalPartMap.end()){
+	//do{
+		//if(ppos==FinalPartMap.end()) ppos=PartMap.begin();
 		part=ppos->second;
 		t=part->tau0*cosh(part->tau0);
 		tauwrite=part->tau_lastint;
@@ -524,13 +517,13 @@ double CB3D::WriteOSCAR(){
 		}
 		++ppos;
 		ipart+=1;
-	} while(ipart<nparts);
+	//} while(ipart<nparts);
+	}
 	fclose(oscarfile);
 	return dnchdeta/(2.0*ETAMAX);
 }
 
 void CB3D::WriteDens(){
-
 	string densfilename="output/"+run_name+"/"+qualifier+"/dens.dat";
 	FILE *densfile = fopen(densfilename.c_str(),"w");
 	fprintf(densfile,"#ix iy  dens[itau=0] dens[itau=1]...\n");
@@ -551,9 +544,7 @@ void CB3D::WriteDens(){
 	}
 	fclose(densfile);
 }
-
 void CB3D::WriteAnnihilationData(){
-
 	if(ANNIHILATION_CHECK){
 		double total=0.0;
 		int itau,imax=lrint(TAUCOLLMAX);
@@ -566,7 +557,6 @@ void CB3D::WriteAnnihilationData(){
 }
 
 void CB3D::PerformAllActions(){
-
 	if(DENSWRITE){
 		for(int itau=0;itau<DENSWRITE_NTAU;itau++){
 			AddAction_DensCalc((itau+1.0)*DENSWRITE_DELTAU);
@@ -598,7 +588,6 @@ void CB3D::PerformAllActions(){
 }
 
 void CB3D::KillAllActions(){
-
 	CAction *action;
 	CActionMap::iterator epos=ActionMap.begin();
 	while(epos!=ActionMap.end()){
@@ -610,7 +599,6 @@ void CB3D::KillAllActions(){
 }
 
 void CB3D::KillAllParts(){
-
 	CPartMap *partmap=&PartMap;
 	CPart *part;
 	CPartMap::iterator ppos=partmap->begin();
@@ -657,7 +645,6 @@ void CB3D::PrintActionMap(CActionMap *actionmap){
 }
 
 void CB3D::FindAllCollisions(){
-
 	double taucoll;
 	CPartMap::iterator ppos1,ppos2;
 	CPart *part1,*part2;
@@ -711,7 +698,6 @@ void CB3D::PrintPartList(){
 }
 
 void CB3D::ListFutureCollisions(){
-
 	CActionMap::iterator epos=ActionMap.begin();
 	CAction *action;
 	CPartMap::iterator p1,p2;
@@ -728,7 +714,6 @@ void CB3D::ListFutureCollisions(){
 }
 
 double CB3D::GetPiBsquared(CPart *part1,CPart *part2){
-
 	ofstream outputfile;
 	
 	int alpha;
@@ -787,7 +772,6 @@ double CB3D::GetPiBsquared(CPart *part1,CPart *part2){
 }
 
 void CB3D::freegascalc_onespecies(double m,double t,double &p,double &e,double &dens,double &sigma2,double &dedt){
-
 	const double prefactor=1.0/(2.0*PI*PI*pow(HBARC,3));
 	double k0,k1,z,k0prime,k1prime,m2,m3,m4,t2,t3,I1,I2,Iomega;
 	m2=m*m;
@@ -821,7 +805,6 @@ void CB3D::freegascalc_onespecies(double m,double t,double &p,double &e,double &
 }
 
 double CB3D::CalcSigma(CPart *part1,CPart *part2){
-
 	double sigma=0.0,Gamma,G,G2,MR,M,m1,m2,b,q2=0.0,q3=0.0,q4=0.0,qR2,tan2delta;
 	double inel_d=0.0, q_prime;
 	double sigma_elastic, sigma_merge, sigma_inelastic,temp;
@@ -954,13 +937,11 @@ return 0;
 }
 
 void CB3D::ReadHydroInput(){
-
 	if(OSUHYDRO) osuhydrotob3d->ReadInput();
 	else hydrotob3d->ReadInput();
 }
 
 int CB3D::HydrotoB3D(){
-
 	int n0;
 	if(OSUHYDRO) n0=osuhydrotob3d->MakeEvent();
 	else n0=hydrotob3d->MakeEvent();
@@ -968,7 +949,6 @@ int CB3D::HydrotoB3D(){
 }
 
 void CB3D::Reset(){
-
 	tau=0.0;
 	KillAllActions();
 	nactions=0;
