@@ -10,7 +10,7 @@ const int bmin = 0;
 const int bmax = 18;
 const int firstEvent = 0;
 const int lastEvent = 1000;
-const int scaler = 24;
+const int scaler = 25;
 
 // TODO: select an energy scaling value
 //const double e0 = (scaler*0.1+0.1)*0.00150022 * TMath::Power(140.*max_x/(5.*nbins), 4); // 200 GeV (RHIC) 
@@ -46,8 +46,8 @@ void Hist2Txt_PbPb5TeV () {
 
 		T->GetEntry(eventNum);
 
-		//float ScaleFactor = fSF->Eval(npart);
-		float ScaleFactor = 1.7*fSF->Eval(npart);
+		//float ScaleFactor = fSF->Eval(npart); //t0=0.5 fm/c
+		float ScaleFactor = 1.7*fSF->Eval(npart); //t0=0.3 fm/c
 
 		ofstream outFile;
 		char outFileName[500];

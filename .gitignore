@@ -21,12 +21,19 @@ backup
 #install
 *install*
 
+analyze
+b3d
+generate
+initE
+vh2-2.1
+
 #SONIC template
 *template*
 initedFiles*
 
 #MCGlauber
 MCGlauber-*
+runglauber*
 
 #outfile
 outfile*
