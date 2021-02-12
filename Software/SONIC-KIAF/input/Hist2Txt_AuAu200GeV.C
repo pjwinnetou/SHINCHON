@@ -10,7 +10,7 @@ const int bmin = 0;
 const int bmax = 18;
 const int firstEvent = 0;
 const int lastEvent = 1000;
-const int scaler = 20;
+const int scaler = 22;
 
 // TODO: select an energy scaling value
 //const double e0 = (scaler*0.1+0.1)*0.00150022 * TMath::Power(140.*max_x/(5.*nbins), 4); // 200 GeV (RHIC) 
