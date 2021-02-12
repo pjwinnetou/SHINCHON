@@ -21,23 +21,11 @@ backup
 #install
 *install*
 
-Software/SONIC-KIAF/b3d/analyze
-Software/SONIC-KIAF/b3d/b3d
-Software/SONIC-KIAF/uvh2-1/generate
-Software/SONIC-KIAF/uvh2-1/initE
-Software/SONIC-KIAF/uvh2-1/vh2-2.1
-
-Software/SONIC-Ubuntu/b3d/analyze
-Software/SONIC-Ubuntu/b3d/b3d
-Software/SONIC-Ubuntu/uvh2-1/generate
-Software/SONIC-Ubuntu/uvh2-1/initE
-Software/SONIC-Ubuntu/uvh2-1/vh2-2.1
-
-Software/SONIC-Macos/b3d/analyze
-Software/SONIC-Macos/b3d/b3d
-Software/SONIC-Macos/uvh2-1/generate
-Software/SONIC-Macos/uvh2-1/initE
-Software/SONIC-Macos/uvh2-1/vh2-2.1
+analyze
+b3d
+generate
+initE
+vh2-2.1
 
 #SONIC template
 *template*
@@ -45,6 +33,7 @@ initedFiles*
 
 #MCGlauber
 MCGlauber-*
+runglauber*
 
 #outfile
 outfile*
