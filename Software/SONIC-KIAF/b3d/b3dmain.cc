@@ -26,7 +26,8 @@ int main(int argc, char *argv[]){
 		for(ievent=0;ievent<neventsmax;ievent++){
 			nparts=b3d->hydrotob3d->MakeEventPR();
 			b3d->PerformAllActions();
-      dnchdy+=b3d->WriteDataH5();
+      //dnchdy+=b3d->WriteDataH5();
+      dnchdy+=b3d->WriteOSCAR();
       printf("##### finished event %d ##### dNch/dy=%g #####\n",b3d->ievent_write,double(dnchdy)/double(ievent+1));
 			printf("nscatter=%g, ninelastic=%g, nmerges=%g, ncellexits=%g\n",double(b3d->nscatter),double(b3d->ninelastic),double(b3d->nmerge),double(b3d->nexit));
       cout << "Elastic Scattering: " << b3d->nscatter << " Inelastic Scatter: " << b3d->ninelastic << " Merges: " << b3d->nmerge << endl;
