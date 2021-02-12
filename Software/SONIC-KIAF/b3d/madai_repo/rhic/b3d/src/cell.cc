@@ -4,10 +4,9 @@
 #include "b3d.h"
 using namespace std;
 
-// CB3D *CB3DCell::b3d=NULL;
+CB3D *CB3DCell::b3d=NULL;
 
-CB3DCell::CB3DCell(double xminset,double xmaxset,double yminset,double ymaxset,double etaminset,double etamaxset, CB3D *b3d_set){
-	b3d = b3d_set;
+CB3DCell::CB3DCell(double xminset,double xmaxset,double yminset,double ymaxset,double etaminset,double etamaxset){
 	xmin=xminset; xmax=xmaxset; ymin=yminset; ymax=ymaxset; etamin=etaminset; etamax=etamaxset;	
 	ireflection=0;
 	creflection=NULL;

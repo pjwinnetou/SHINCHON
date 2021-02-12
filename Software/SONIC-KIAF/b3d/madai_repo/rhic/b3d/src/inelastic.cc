@@ -4,16 +4,16 @@
 
 using namespace std;
 
-//CB3D *CInelasticList::b3d=NULL;
+CB3D *CInelasticList::b3d=NULL;
 bool CInelasticList::UseFile = false;
 bool CInelasticList::UseInelasticArray = false;
 
-CInelasticList::CInelasticList(CB3D *b3d_set){
+CInelasticList::CInelasticList(){
 	string filename;
 	ifstream inelasticfile;
 	// UseFile = false;
 	// UseInelasticArray = true;
-	b3d = b3d_set;
+
 	if(b3d!=NULL){
 		parmap=&(b3d->parmap);
 		GfirstResInfoptr=b3d->reslist->GfirstResInfoptr;

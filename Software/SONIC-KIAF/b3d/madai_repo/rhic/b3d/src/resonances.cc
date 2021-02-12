@@ -4,14 +4,9 @@
 
 using namespace std;
 
-// CB3D *CResList::b3d=NULL;
+CB3D *CResList::b3d=NULL;
 
-CResList::CResList() {
-	b3d = NULL;
-}
-
-CResList::CResList(CB3D *b3d_set){
-	b3d = b3d_set;
+CResList::CResList(){
 	if(b3d!=NULL){
 		parmap=&(b3d->parmap);
 		ReadResInfo();
@@ -23,11 +18,9 @@ CResList::CResList(parameterMap* parmap_in){
 		ReadResInfo();
 }
 
+CRandom *CResInfo::ranptr=new CRandom(-1234);
 
-// CRandom *CResInfo::ranptr=new CRandom(-1234);
-
-CResInfo::CResInfo(CRandom *ranptr_set){
-	ranptr = ranptr_set;
+CResInfo::CResInfo(){
 	count=0;
 	minmass=0.0;
 	nextResInfoptr=NULL;
@@ -41,7 +34,7 @@ CMerge::CMerge(CResInfo *resinfo_in,double branching_in, int L_in){
 	next=NULL;
 }
 
-void CResInfo::DecayGetResInfoptr(int &nbodies,CResInfo **&daughterresinfoptr){ 
+void CResInfo::DecayGetResInfoptr(int &nbodies,CResInfo **&daughterresinfoptr){
 	double randy,bsum;
 	int ibody;
 	CBranchInfo *bptr;
@@ -180,7 +173,7 @@ void CResList::ReadResInfo(){
 			char cname[100];
 			resinfofile.getline(cname,100);
 			name=cname;
-			resinfoptr=new CResInfo(b3d->res_ranptr);
+			resinfoptr=new CResInfo();
 			if(oldresinfoptr==NULL){
 				GfirstResInfoptr=resinfoptr;
 			}

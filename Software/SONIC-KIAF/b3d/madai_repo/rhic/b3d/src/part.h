@@ -37,7 +37,6 @@ typedef pair<double,CAction*> CActionPair;
 class CPart{
 public:
 	CPart();
-	CPart(CB3D *b3d_set);
 	~CPart();
 	CB3DCell *cell,*nextcell;
 	double tau0,tau_lastint,tauexit,taudecay;
@@ -82,7 +81,7 @@ public:
 	CPartMap *currentmap; // PartList for a Cell, or b3d->DeadPartList
 	CB3DCell *FindCell();
 
-	CB3D *b3d;
+	static CB3D *b3d;
 	double GetEta(double tau);
 	double GetPseudoRapidity();
 	double GetMT();

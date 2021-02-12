@@ -5,7 +5,7 @@ using namespace std;
 
 int CB3D::Annihilate(CPart *part1,CPart *part2){
 	CPart *daughter[5],*dptr;
-	// CResInfo daughterresinfo[5];
+	CResInfo daughterresinfo[5];
 	int netq,netb,nets,nK0bar,nK0,nKplus,nKminus,npi0,npiplus,npiminus,npions,nkaons,npaircheck,qpions;
 	double *pa,*pb,pc[4],ma,mb,q,cthet,sthet,phi;
 	double u[4];

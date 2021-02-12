@@ -3,16 +3,13 @@
 
 #include "b3d.h"
 
-// CB3D *CAction::b3d = NULL;
-
-CAction::CAction(CB3D *b3d_set) {
-	b3d = b3d_set; 
+CB3D *CAction::b3d=NULL;
+CAction::CAction(){
 }
 
 // type=0(creation) 1(decay) 2(collision) 3(VizWrite) 4(DensCalc)
 
 CActionMap::iterator CAction::GetPos(CActionMap *emap){
-
 	pair<CActionMap::iterator,CActionMap::iterator> epospair;
 	CActionMap::iterator epos;
 	epospair=emap->equal_range(key);
@@ -27,7 +24,6 @@ CActionMap::iterator CAction::GetPos(CActionMap *emap){
 }
 
 void CAction::MoveToActionMap(){
-
 	CActionMap::iterator epos,eepos;
 	if(currentmap==&b3d->ActionMap){
 		printf("trying to move action to ActionMap even though action is already in ActionMap\n");
@@ -50,7 +46,6 @@ void CAction::MoveToActionMap(){
 }
 
 void CAction::Kill(){
-
 	if(currentmap==&b3d->ActionMap){
 		CActionMap::iterator eepos,epos=GetPos(currentmap);
 		currentmap->erase(epos);
@@ -75,19 +70,16 @@ void CAction::Kill(){
 }
 
 void CAction::AddToMap(CActionMap *newmap){
-
 	currentmap=newmap;
 	newmap->insert(CActionPair(key,this));
 }
 
 void CAction::AddToMap(CActionMap::iterator guess,CActionMap *newmap){
-
 	currentmap=newmap;
 	newmap->insert(guess,CActionPair(key,this));
 }
 
 void CAction::AddPart(CPart *part){
-
 	partmap.insert(CPartPair(part->key,part));
 }
 
@@ -103,7 +95,6 @@ void CAction::Print(){
 }
 
 void CAction::CheckPartList(){
-
 	CPart *part;
 	CPartMap::iterator ppos,ppos2;
 	CPartMap *pmap;
@@ -122,7 +113,6 @@ void CAction::CheckPartList(){
 }
 
 void CAction::PerformDensCalc(){
-
 	int itau;
 	itau=lrint(floor((tau-0.001)/b3d->DENSWRITE_DELTAU));
 	if(itau>=b3d->DENSWRITE_NTAU){

@@ -3,15 +3,9 @@
 
 #include "b3d.h"
 using namespace std;
-// CB3D *CPart::b3d=NULL;
-CPart::CPart() {
-	b3d = NULL;
-	p = new double[4];
-	r = new double[4];
-}
+CB3D *CPart::b3d=NULL;
 
-CPart::CPart(CB3D *b3d_set){
-	b3d = b3d_set;
+CPart::CPart(){
 	p=new double[4];
 	r=new double[4];
 }
@@ -21,7 +15,6 @@ CPart::~CPart(){
 }
 
 void CPart::Copy(CPart *part){
-	
 	int alpha;
 	tau0=part->tau0;
 	tau_lastint=part->tau_lastint;
@@ -37,7 +30,6 @@ void CPart::Copy(CPart *part){
 }
 
 void CPart::InitH5(CPartH5 *partH5){
-
 	double et;
 	CResInfo *resinfoptr;
 	int ID;
@@ -78,7 +70,6 @@ void CPart::InitH5(CPartH5 *partH5){
 }
 
 void CPart::Init(int IDset,double rxset,double ryset,double tauset,double etaset,double pxset,double pyset,double massset,double rapidityset){
-
 	double et;
 	CResInfo *resinfoptr;
 	int ID;
@@ -128,7 +119,6 @@ void CPart::Init(int IDset,double rxset,double ryset,double tauset,double etaset
 }
 
 void CPart::CyclicReset(){
-
 	double eta_offset,etamax=b3d->ETAMAX;
 	double mt;
 	while(fabs(eta)>etamax){
@@ -162,13 +152,11 @@ void CPart::Print(){
 }
 
 void CPart::ChangeMap(CPartMap *newmap){
-
 	DeleteFromCurrentMap();
 	AddToMap(newmap);
 }
 
 CPartMap::iterator CPart::DeleteFromCurrentMap(){
-
 	CPartMap::iterator neighbor;
 	CPartMap::iterator ppos=GetPos(currentmap);
 	neighbor=ppos;
@@ -185,7 +173,6 @@ CPartMap::iterator CPart::DeleteFromCurrentMap(){
 }
 
 CPartMap::iterator CPart::DeleteFromMap(CPartMap *partmap){
-
   CPartMap::iterator neighbor;
   CPartMap::iterator ppos=GetPos(partmap);
   neighbor=ppos;
@@ -222,31 +209,26 @@ CPartMap::iterator CPart::DeleteFromMap(CPartMap *partmap){
 	}*/
 
 void CPart::AddToMap(CPartMap *newmap){
-
 	newmap->insert(CPartPair(key,this));
 	if(newmap==&b3d->PartMap || newmap==&b3d->DeadPartMap || newmap==&b3d->FinalPartMap)
 		currentmap=newmap;
 }
 
 void CPart::AddToMap(CPartMap::iterator guess,CPartMap *newmap){
-
 	newmap->insert(guess,CPartPair(key,this));
 	currentmap=newmap;
 }
 
 void CPart::SubtractAction(CAction *action){
-
 	CActionMap::iterator epos=action->GetPos(&actionmap);
 	if(epos!=actionmap.end()) actionmap.erase(epos);
 }
 
 void CPart::AddAction(CAction *action){
-
 	actionmap.insert(CActionPair(action->key,action));
 }
 
 void CPart::Propagate(double tau){
-
 	double t0,vz,gamma,gammav;
 	CPartMap *pmap=currentmap;
 	CPartMap::iterator neighbor;
@@ -269,12 +251,10 @@ void CPart::Propagate(double tau){
 }
 
 void CPart::SetInitialKey(){
-
 	key=listid;
 }
 
 CPartMap::iterator CPart::GetPos(CPartMap *pmap){
-
 	pair<CPartMap::iterator,CPartMap::iterator> ppospair;
 	CPartMap::iterator ppos,pend;
 	long long int count;
@@ -294,7 +274,6 @@ CPartMap::iterator CPart::GetPos(CPartMap *pmap){
 }
 
 void CPart::CheckMap(CPartMap *expectedpartmap){
-
 	if(currentmap!=expectedpartmap){
 		printf("FATAL: XXXXXXXXX particle not in expected map XXXXXXXXX\n");
 		if(currentmap==&(b3d->DeadPartMap)){
@@ -309,7 +288,6 @@ void CPart::CheckMap(CPartMap *expectedpartmap){
 }
 
 double CPart::GetMass(){
-
 	double s=p[0]*p[0]-p[1]*p[1]-p[2]*p[2]-p[3]*p[3];
 	if(s<0.0){
 		if(resinfo->code==22) s=0.0;
@@ -354,7 +332,6 @@ double CPart::GetMT(){
 }
 
 void CPart::KillActions(){
-
 	CActionMap::iterator ep,epp;
 	CAction *action;
 	ep=actionmap.begin();
@@ -368,7 +345,6 @@ void CPart::KillActions(){
 }
 
 void CPart::Kill(){
-
 	KillActions();
 	if(cell!=NULL){
 		RemoveFromCell();
@@ -416,7 +392,6 @@ void CPart::BjorkenUnTranslate(){
 }
 
 void CPart::FindCollisions(){
-
 	int ix,iy,ieta;
 	double taucoll;
 	CPart *part2,*part1=this;
@@ -442,7 +417,6 @@ void CPart::FindCollisions(){
 }
 
 CB3DCell *CPart::FindCell(){
-
 	int ieta,ix,iy;
 	double deta=b3d->ETAMAX/double(b3d->NETA);
 	ieta=lrint(floor((eta+b3d->ETAMAX)/deta));
@@ -463,7 +437,6 @@ CB3DCell *CPart::FindCell(){
 }
 
 void CPart::FindDecay(){
-
 	CAction *action;
 	if(b3d->DeadActionMap.size()==0){
 		printf("MUST INCREASE NACTIONS_MAX\n");
@@ -483,7 +456,6 @@ void CPart::FindDecay(){
 }
 
 void CPart::FindCellExit(){
-
 	if(active){
 		double t,taux,tauy,taueta,z;
 		double etamax=cell->etamax,etamin=cell->etamin;
@@ -553,7 +525,6 @@ void CPart::FindCellExit(){
 }
 
 void CPart::FindActions(){
-
 	if(active!=true){
 		printf("CPart::FindActions(), trying to Reset Inactive particle\n");
 		exit(1);
@@ -591,13 +562,11 @@ double CPart::GetPseudoRapidity(){
 }
 
 void CPart::Boost(double *u){
-
 	BoostP(u);
 	BoostR(u);
 }
 
 void CPart::BoostP(double *u){
-
 	int alpha;
 	double pprime[4];
 	Misc::Boost(u,p,pprime);
@@ -606,7 +575,6 @@ void CPart::BoostP(double *u){
 }
 
 void CPart::BoostR(double *u){
-
 	int alpha;
 	double rprime[4];
 	Misc::Boost(u,r,rprime);
@@ -616,7 +584,6 @@ void CPart::BoostR(double *u){
 }
 
 void CPart::Copy(CPartH5 *parth5){
-
 	int alpha;
 	double mt;
 	tau0=parth5->tau;
@@ -641,7 +608,6 @@ void CPart::Copy(CPartH5 *parth5){
 }
 
 void CPart::RemoveFromCell(){
-
 	if(cell!=NULL){
 		CPartMap::iterator ppos=GetPos(&(cell->partmap));
 		if(ppos==cell->partmap.end()){
@@ -657,7 +623,6 @@ void CPart::RemoveFromCell(){
 }
 
 void CPart::ChangeCell(CB3DCell *newcell){
-
 	if(newcell!=cell){
 		if(cell!=NULL)
 			RemoveFromCell();

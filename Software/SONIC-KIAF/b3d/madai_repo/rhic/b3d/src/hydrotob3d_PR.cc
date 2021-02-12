@@ -16,7 +16,6 @@ CPRCell::CPRCell(){
 }
 
 void CHYDROtoB3D::InitPR(){
-	cout << 0 << endl;
 	if(initialization==true){
 		printf("CHYDROtoB3D already initialized\n");
 		exit(1);
@@ -26,27 +25,19 @@ void CHYDROtoB3D::InitPR(){
 	double pi,ei,sigma2i,dedti,degen;
 	T=parameter::getD(b3d->parmap,"HYDRO_FOTEMP",150.0);
 	ETAMAX=b3d->ETAMAX;
-
 	randy=b3d->randy;
-
 	MC_Ntarget=0.0;
 	MC_Nbar=0.0;
 	MC_NWrite=0;
 	nsample=b3d->NSAMPLE;
-
 	reslist=b3d->reslist;
-
 	nres=reslist->NResonances;
-
 	//printf("epsilon_H=%g\n",intrinsic->epsilon);
 	density=new double[nres];
 	prcell=new CPRCell[b3d->NPRCELLSMAX];
-
 	epsilon=P=0.0;
 	CResInfo *resinfo=reslist->GfirstResInfoptr;
-
 	for(ires=0;ires<nres;ires++){
-
 		if(resinfo->code!=22){
 			degen=2.0*resinfo->spin+1.0;
 			printf("ires=%d, ID=%d, degen=%g, mass=%g, T=%g\n",ires,resinfo->code,degen,resinfo->mass,T);
@@ -56,13 +47,9 @@ void CHYDROtoB3D::InitPR(){
 			P+=degen*pi;
 			epsilon+=degen*ei;
 		}
-
 		resinfo=resinfo->nextResInfoptr;
-
 	}
-
 	GetLambdaFact();
-
 	//TestLambdaFact();
 	CPRCell::T=T;
 	CPRCell::epsilon=epsilon;
@@ -74,15 +61,15 @@ void CHYDROtoB3D::InitPR(){
 }
 
 void CHYDROtoB3D::ReadInputPR(){
-
 	if(!initialization) InitPR();
 	string inputfilename="output/"+b3d->run_name+"/"+b3d->qualifier+"/freezeout_bulk.dat";
-	// This copies 'freezeout_bulk.dat' generated via UVH2+1 to the correct B3D directory --- modification by MH --- begin
+	//This copies 'freezeout_bulk.dat' generated via UVH2+1 to the correct B3D directory --- modification by MH --- begin
 	string copycommand = "cp data/freezeout_bulk.dat " + inputfilename;
 	system(copycommand.c_str());
 	copycommand = "echo cp data/freezeout_bulk.dat " + inputfilename;
 	system(copycommand.c_str());
-	// modification by MH --- end
+	//modification by MH --- end
+
 	printf("freezeout info from %s\n",inputfilename.c_str());
 	input=fopen(inputfilename.c_str(),"r");
 	if(input != NULL){
@@ -112,7 +99,6 @@ void CHYDROtoB3D::ReadInputPR(){
 }
 
 int CHYDROtoB3D::MakeEventPR(){
-
 	meanpt=0.0;
 	meanu=0.0;
 	normpt=0;
@@ -132,7 +118,6 @@ int CHYDROtoB3D::MakeEventPR(){
 }
 
 int CHYDROtoB3D::GenerateParticlesPR(int iprcell){
-
 	CResInfo *resinfo;
 	CPRCell *cell=&prcell[iprcell];
 	double dNbarmax,gspread=0.2;
@@ -182,9 +167,7 @@ int CHYDROtoB3D::GenerateParticlesPR(int iprcell){
 		printf("fabs(MC_Nbar)=%g\n",fabs(MC_Nbar));
 		exit(1);
 	}
-
 	resinfo=reslist->GfirstResInfoptr;
-
 	for(ires=0;ires<nres;ires++){
 		ID=resinfo->code;
 		if(ID!=22){
@@ -192,11 +175,9 @@ int CHYDROtoB3D::GenerateParticlesPR(int iprcell){
 			//printf("dNbarmax=%g, density[%d]=%g\n",dNbarmax,ires,density[ires]);
 			MC_Nbar+=dNbarmax;
 			while(MC_Nbar>MC_Ntarget){
-
 				MC_Ntarget-=log(randy->ran());
 				mass=resinfo->mass;
 				randy->generate_boltzmann(mass,T,ptilde);
-
 				for(alpha=1;alpha<4;alpha++){
 					p[alpha]=0.0;
 					for(beta=1;beta<4;beta++) p[alpha]+=ptilde[beta]*lambda[alpha][beta];
@@ -258,7 +239,6 @@ int CHYDROtoB3D::GenerateParticlesPR(int iprcell){
 							printf("MUST INCREASE NPARTSMAX!!!! NPARTSMAX=%d\n",b3d->NPARTSMAX);
 							exit(1);
 						}
-
 						b3d->partarray[ipart]->Init(ID,x[1],x[2],tau,eta,p[1],p[2],mass,y);
 					}
 				}
@@ -266,7 +246,6 @@ int CHYDROtoB3D::GenerateParticlesPR(int iprcell){
 		}
 		resinfo=resinfo->nextResInfoptr;
 	}
-
 	return nparts;
 }
 
@@ -406,7 +385,7 @@ void CPRCell::GetPiTildeOverH(double pixx,double pixy,double piyy,double pib){ /
 	Pi[3][0]=0.0;
 	Pi[3][1]=0.0;
 	Pi[3][2]=0.0;
-	Pi[3][3]=Pi[0][0]-Pi[1][1]-Pi[2][2]-3*pib;
+	Pi[3][3]=Pi[0][0]-Pi[1][1]-Pi[2][2]-pib;
 	//printf("Trace Pi=%g =? 0\n",Pi[0][0]-Pi[1][1]-Pi[2][2]-Pi[3][3]);
 	// Now boost to com frame
 	int alpha,beta,gamma,delta;

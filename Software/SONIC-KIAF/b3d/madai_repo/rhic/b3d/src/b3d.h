@@ -108,7 +108,7 @@ public:
 	\param[in] run_name_set This is the "run name" read in from the command line.
 	*/
 	CB3D(); // this is a constructor which does nothing but create an object
-	CB3D(string run_name_set, int ithread_set); // this gets all arrays ready
+	CB3D(string run_name_set); // this gets all arrays ready
 	void InitArrays();
 	~CB3D();	//!< Destructor.
 	double tau,TAUCOLLMAX;
@@ -162,7 +162,6 @@ public:
 	double CalcSigma(CPart *part1,CPart *part2);
 
 	CRandom *randy;
-	CRandom *res_ranptr;
 
 	void PrintActionMap(CActionMap *actionmap);
 
@@ -217,10 +216,10 @@ public:
 	void PerformResetCollisions();
 	void PerformVizWrite();
 	//void PerformSwallowParticles();
-	CAction(CB3D *b3d_set);
+	CAction();
 	~CAction();
 
-	CB3D *b3d;
+	static CB3D *b3d;
 
 	CActionMap::iterator GetPos(CActionMap *actionmap);
 	void MoveToActionMap();
@@ -253,8 +252,8 @@ public:
 	void Print();
 	double *dens;
 	
-	CB3DCell(double xmin,double xmax,double ymin,double ymax,double etamin,double etamax, CB3D *b3d_set);
-	CB3D *b3d;
+	CB3DCell(double xmin,double xmax,double ymin,double ymax,double etamin,double etamax);
+	static CB3D *b3d;
 };
 
 

@@ -60,7 +60,7 @@ public:
 	//!Number of resonances in CB3D class. Repetitive, but simpler.
 	int NResonances;
 	//!Constructor
-	CInelasticList(CB3D *b3d_set);
+	CInelasticList();
 	//!CResInfo pointer that points to the first CResInfo object in the list.
 	CResInfo *GfirstResInfoptr;
 	//!Reads in Inelastic information.
@@ -99,7 +99,7 @@ public:
 	This array stores all the inelastic scattering exit channels. The indices are in referenced in alphabetical order; \f$|b|\f$ (baryon number), \f$|q|\f$ (charge), \f$|s|\f$ (strangeness), \f$Sign(b)\f$ baryon sign, \f$Sign(q)\f$ charge sign, and \f$Sign(s)\f$ strangeness sign.
 	*/
 	list<CInelasticInfo> ThermalArray[3][5][7][2][2][2];
-	CB3D *b3d;	/*!< A pointer to the CB3D object the list belongs to. */
+	static CB3D *b3d;	/*!< A pointer to the CB3D object the list belongs to. */
 	
 	static bool UseFile;	/*!< Determines whether or not to read in info from file. Set in CB3D constructor from parmap. */
 	static bool UseInelasticArray;	/*!< Determines whether or not to define InelasticArray. Set in CB3D constructor from parmap. */

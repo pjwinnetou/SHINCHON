@@ -81,8 +81,9 @@ public:
 	void DecayGetResInfoptr(int &nbodies,CResInfo **&daughterresinfoptr);
 	void DecayGetResInfoptr_minmass(int &nbodies,CResInfo **&daughterresinfoptr);
 	bool CheckForDaughters(int code);
-	CResInfo(CRandom *ranptr);	//!< Constructor.
-	CRandom *ranptr;	//!< A dynamically allocated random number generator.
+	CResInfo();	//!< Constructor.
+	static CRandom *ranptr;	//!< A dynamically allocated random number generator.
+	
 };
 //!This class is used for storing and organizing CResInfo objects.
 /*!
@@ -97,8 +98,7 @@ Much like the CInelasticList class is used to store and organize CInelasticInfo 
 class CResList{
 public:
 	int NResonances;	//!< The number of resonances read in.
-	CResList();
-	CResList(CB3D *b3d_set);	//!< Constructor.
+	CResList();	//!< Constructor.
 	CResList(parameterMap* parmap_in);
 	//!Pointer to the first CResInfo pointer (the head of the linked list).
 	CResInfo *GfirstResInfoptr;
@@ -129,7 +129,7 @@ public:
 	\sa CMerge::ires
 	*/
 	CMerge ***MergeArray;
-	CB3D *b3d;	//!< Pointer to the CB3D object the CResList object belongs to.
+	static CB3D *b3d;	//!< Pointer to the CB3D object the CResList object belongs to.
 	
 };
 

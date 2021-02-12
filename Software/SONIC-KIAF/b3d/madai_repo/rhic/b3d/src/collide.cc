@@ -85,7 +85,6 @@ int CB3D::Collide(CPart *part1,CPart *part2){
 		rstrange=0.5*sqrt(sigma_annihilation);
 		rstrange*=pow(ANNIHILATION_SREDUCTION,abs(part1->resinfo->strange))+pow(ANNIHILATION_SREDUCTION,abs(part2->resinfo->strange));
 		sigma_annihilation=rstrange*rstrange;
-		sigma+=sigma_annihilation; // This line is not in b3d v2.3.
 		if(scompare<sigma && tau<TAUCOLLMAX){
 			itau=lrint(floor(tau));
 			annihilation_array[itau]+=1.0;
