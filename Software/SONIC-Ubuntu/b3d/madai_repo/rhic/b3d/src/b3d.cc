@@ -467,7 +467,8 @@ double CB3D::WriteOSCAR(){
 	else{
 		oscarfile=fopen(oscarfilename.c_str(),"a");
 	}
-	int nparts=PartMap.size()+FinalPartMap.size();
+	//int nparts=PartMap.size()+FinalPartMap.size();
+	int nparts=int(FinalPartMap.size());
 	fprintf(oscarfile,"%7d %6d    %8.5f     %8.5f\n",ievent_write,nparts,parameter::getD(parmap,"GLAUBER_B",0.0),parameter::getD(parmap,"GLAUBER_B",0.0));
 	double v,pperp,eperp,dnchdeta=0.0,dnchdy=0,t,twrite,tauwrite,etawrite,eta,deleta,y,rwrite[4],pwrite[4],mass;
 	int ipart,nmesons=0,nch=0;
@@ -475,8 +476,9 @@ double CB3D::WriteOSCAR(){
 	CPartMap::iterator ppos;
 	ipart=0;
 	ppos=FinalPartMap.begin();
-	do{
-		if(ppos==FinalPartMap.end()) ppos=PartMap.begin();
+	while(ppos!=FinalPartMap.end()){
+	//do{
+		//if(ppos==FinalPartMap.end()) ppos=PartMap.begin();
 		part=ppos->second;
 		t=part->tau0*cosh(part->tau0);
 		tauwrite=part->tau_lastint;
@@ -515,7 +517,8 @@ double CB3D::WriteOSCAR(){
 		}
 		++ppos;
 		ipart+=1;
-	} while(ipart<nparts);
+	//} while(ipart<nparts);
+	}
 	fclose(oscarfile);
 	return dnchdeta/(2.0*ETAMAX);
 }
