@@ -942,19 +942,24 @@ void runAndOutputLemonTree(const Int_t n,
 			const Int_t nbins = 100; 
       const Int_t nbinsx = nbins;
       const Int_t nbinsy = nbins;
-      const Double_t max_x = 15.0;
+      //const Double_t max_x = 15.0; //for large system
+			const Double_t max_x = 7.5; //for small system
       
       // now create an energy density distribution (a.u.)
-      TH2D* inited_hist = new TH2D(Form("inited_event%i",ievent), ";x;y;E [a.u.]", nbinsx, -max_x, max_x, nbinsy, -max_x, max_x);
+			TH2D* inited_hist = new TH2D(Form("inited_event%i",ievent), ";x;y;E [a.u.]", nbinsx, -max_x, max_x, nbinsy, -max_x, max_x);
+			TH2D* inited_hist_translated = new TH2D(Form("inited_translated_event%i",ievent), ";x;y;E [a.u.]", nbinsx, -max_x, max_x, nbinsy, -max_x, max_x);
+
+			float xmax = 0.0;
+			float ymax = 0.0;
+			float vmax = 0.0;
+
       for (Int_t ybin=1; ybin<=nbinsy; ybin++) {
 	for (Int_t xbin=1; xbin<=nbinsx; xbin++) {
 
-		//cout << xbin << " " << ybin << endl;
-	  
 	  const Double_t xval = inited_hist->GetXaxis()->GetBinCenter(xbin);
 	  const Double_t yval = inited_hist->GetYaxis()->GetBinCenter(ybin);
 	  long double content = 0.;  // sum the contributions from all wounded nucleons
-	  
+
 	  for (Int_t i = 0; i<AN; ++i) {
 	    TGlauNucleon *nucleonA=(TGlauNucleon*)(nucleonsA->At(i));
 	    if (!nucleonA->IsWounded()) continue;   // skip non-wounded nucleons
@@ -966,11 +971,44 @@ void runAndOutputLemonTree(const Int_t n,
 	    content += smearing_function->Eval(nucleonB->GetX() - xval, nucleonB->GetY() - yval);
 	  }
 	  inited_hist->SetBinContent(xbin, ybin, content);
+
+		if ( content>vmax ){
+			xmax = xval;
+			ymax = yval;
+			vmax = content;
+		}
 	  
 	}
       }
+
+      for (Int_t ybin=1; ybin<=nbinsy; ybin++) {
+	for (Int_t xbin=1; xbin<=nbinsx; xbin++) {
+
+	  const Double_t xval = inited_hist_translated->GetXaxis()->GetBinCenter(xbin) + xmax;
+	  const Double_t yval = inited_hist_translated->GetYaxis()->GetBinCenter(ybin) + ymax;
+	  long double content = 0.;  // sum the contributions from all wounded nucleons
+
+	  for (Int_t i = 0; i<AN; ++i) {
+	    TGlauNucleon *nucleonA=(TGlauNucleon*)(nucleonsA->At(i));
+	    if (!nucleonA->IsWounded()) continue;   // skip non-wounded nucleons
+	    content += smearing_function->Eval(nucleonA->GetX() - xval, nucleonA->GetY() - yval);
+	  }
+	  for (Int_t i = 0; i<BN; ++i) {
+	    TGlauNucleon *nucleonB=(TGlauNucleon*)(nucleonsB->At(i));
+	    if (!nucleonB->IsWounded()) continue;   // skip non-wounded nucleons
+	    content += smearing_function->Eval(nucleonB->GetX() - xval, nucleonB->GetY() - yval);
+	  }
+		inited_hist_translated->SetBinContent(xbin, ybin, content);
+
+	}
+			}
+
+
       inited_hist->Write();
+      inited_hist_translated->Write();
+
       if (inited_hist) delete inited_hist;
+      if (inited_hist_translated) delete inited_hist_translated;
     }
   } // end loop over events
 
