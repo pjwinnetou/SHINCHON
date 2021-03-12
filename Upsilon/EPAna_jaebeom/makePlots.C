@@ -13,7 +13,7 @@
 
 using namespace std;
 
-void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
+void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=0, int phiN=3)
 {
   const char* fPosStr;
   if(kInitPos==0) fPosStr = "InitPosZero";
@@ -24,7 +24,7 @@ void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
   enum fData {CMS_502, CMS_276, STAR_200,};
   const char* fDataStr[nData] = {"CMS502","CMS276","STAR200"};
 
-  TFile* rf = new TFile(Form("outfile_UpsSkim_%s_%s_0000_%04d.root",fDataStr[kDataSel],fPosStr,nrun),"read");
+  TFile* rf = new TFile(Form("outfile_UpsSkim_%s_PhiAng%d_%s_0000_%04d.root",fDataStr[kDataSel],phiN,fPosStr,nrun),"read");
   TTree* tree = (TTree*) rf->Get("tree");
   if(nrun!= tree->GetEntries()){cout << "ERROR!! :::: Number of entries and runs inconsistent!!" << endl;return;}
 
@@ -34,7 +34,7 @@ void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
   else {gSystem->mkdir(savedir.c_str(), kTRUE);}
 
 
-  TFile* wf = new TFile(Form("%s/SavedPlots_%s_%s_nRun%d.root",savedir.c_str(),fDataStr[kDataSel],fPosStr,nrun),"recreate");
+  TFile* wf = new TFile(Form("%s/SavedPlots_%s_PhiAng%d_%s_nRun%d.root",savedir.c_str(),fDataStr[kDataSel],phiN,fPosStr,nrun),"recreate");
 
   SetTree settree_;
   settree_.TreeSetting(tree);
@@ -65,8 +65,8 @@ void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
     it++;
   }
 
-  TH1D* hPhi_allEvt_pt_cos2Pi_EnProf = new TH1D("hist_allEvt_pt_cos2Pi_EPEnProf",";Bin Num;<cos2Pi>",nPt+1,0,5);
-  TH1D* hPhi_allEvt_pt_cos2Pi_Glauber = new TH1D("hist_allEvt_pt_cos2Pi_EPGlauber",";Bin Num;<cos2Pi>",nPt+1,0,5);
+  TH1D* hPhi_allEvt_pt_cos_EnProf = new TH1D(Form("hist_allEvt_pt_cos%dPi_EPEnProf",phiN),Form(";Bin Num;<cos%dPi>",phiN),nPt+1,0,5);
+  TH1D* hPhi_allEvt_pt_cos_Glauber = new TH1D(Form("hist_allEvt_pt_cos%dPi_EPGlauber",phiN),Form(";Bin Num;<cos%dPi>",phiN),nPt+1,0,5);
 
   TH1D* hRAA_npart;
   BinHistSets.BinAndHistSetting(hRAA_npart,"allEvt_RAA","Npart",-1);
@@ -76,17 +76,17 @@ void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
 
   const static int CountMax = 100000000;
 
-  vector<double> AvgCos2Pi_en(nPt+1,0);
-  vector<double> AvgCos2PiErr_en(nPt+1,0);
+  vector<double> AvgCos_en(nPt+1,0);
+  vector<double> AvgCosErr_en(nPt+1,0);
   vector<double> weight_s_en(nPt+1,0);
-  vector<vector<double>> Cos2Pi_raw_en(nPt+1,vector<double> (CountMax,0));
+  vector<vector<double>> Cos_raw_en(nPt+1,vector<double> (CountMax,0));
   vector<vector<double>> weight_en(nPt+1,vector<double> (CountMax,0));
   vector<unsigned int> count_en(nPt+1,0);
 
-  vector<double> AvgCos2Pi_gl(nPt+1,0);
-  vector<double> AvgCos2PiErr_gl(nPt+1,0);
+  vector<double> AvgCos_gl(nPt+1,0);
+  vector<double> AvgCosErr_gl(nPt+1,0);
   vector<double> weight_s_gl(nPt+1,0);
-  vector<vector<double>> Cos2Pi_raw_gl(nPt+1,vector<double> (CountMax,0));
+  vector<vector<double>> Cos_raw_gl(nPt+1,vector<double> (CountMax,0));
   vector<vector<double>> weight_gl(nPt+1,vector<double> (CountMax,0));
   vector<unsigned int> count_gl(nPt+1,0);
 
@@ -105,38 +105,38 @@ void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
       UpsGlauberCor = (TLorentzVector*) Ups4momGlauberCor->At(iups);
       UpsRaw = (TLorentzVector*) Ups4momRaw->At(iups);
       
-      //Cos 2Pi for EnProf
+      //Cos for EnProf
       for(int ipt=0;ipt<nPt;ipt++)
       {
         if(UpsEnProfCor->Pt()>ptBin[ipt] && UpsEnProfCor->Pt()<ptBin[ipt+1]){
-          AvgCos2Pi_en[ipt] += TMath::Cos(2*UpsEnProfCor->Phi())*IsUpsSurv_prob[iups];
-          Cos2Pi_raw_en[ipt][count_en[ipt]] = TMath::Cos(2*UpsEnProfCor->Phi())*IsUpsSurv_prob[iups];
+          AvgCos_en[ipt] += TMath::Cos(phiN*UpsEnProfCor->Phi())*IsUpsSurv_prob[iups];
+          Cos_raw_en[ipt][count_en[ipt]] = TMath::Cos(phiN*UpsEnProfCor->Phi())*IsUpsSurv_prob[iups];
           weight_en[ipt][count_en[ipt]] = IsUpsSurv_prob[iups];
           weight_s_en[ipt] += IsUpsSurv_prob[iups];
           count_en[ipt]++;
         }
       }
       
-      AvgCos2Pi_en[nPt] += TMath::Cos(2*UpsEnProfCor->Phi())*IsUpsSurv_prob[iups];
-      Cos2Pi_raw_en[nPt][count_en[nPt]] = TMath::Cos(2*UpsEnProfCor->Phi())*IsUpsSurv_prob[iups];
+      AvgCos_en[nPt] += TMath::Cos(phiN*UpsEnProfCor->Phi())*IsUpsSurv_prob[iups];
+      Cos_raw_en[nPt][count_en[nPt]] = TMath::Cos(phiN*UpsEnProfCor->Phi())*IsUpsSurv_prob[iups];
       weight_en[nPt][count_en[nPt]] = IsUpsSurv_prob[iups];
       weight_s_en[nPt]++;
       count_en[nPt]++;
       
-      //Cos 2Pi for Glauber
+      //Cos for Glauber
       for(int ipt=0;ipt<nPt;ipt++)
       {
         if(UpsGlauberCor->Pt()>ptBin[ipt] && UpsGlauberCor->Pt()<ptBin[ipt+1]){
-          AvgCos2Pi_gl[ipt] += TMath::Cos(2*UpsGlauberCor->Phi())*IsUpsSurv_prob[iups];
-          Cos2Pi_raw_gl[ipt][count_gl[ipt]] = TMath::Cos(2*UpsGlauberCor->Phi())*IsUpsSurv_prob[iups];
+          AvgCos_gl[ipt] += TMath::Cos(phiN*UpsGlauberCor->Phi())*IsUpsSurv_prob[iups];
+          Cos_raw_gl[ipt][count_gl[ipt]] = TMath::Cos(phiN*UpsGlauberCor->Phi())*IsUpsSurv_prob[iups];
           weight_gl[ipt][count_gl[ipt]] = IsUpsSurv_prob[iups];
           weight_s_gl[ipt] += IsUpsSurv_prob[iups];
           count_gl[ipt]++;
         }
       }
       
-      AvgCos2Pi_gl[nPt] += TMath::Cos(2*UpsGlauberCor->Phi())*IsUpsSurv_prob[iups];
-      Cos2Pi_raw_gl[nPt][count_gl[nPt]] = TMath::Cos(2*UpsGlauberCor->Phi())*IsUpsSurv_prob[iups];
+      AvgCos_gl[nPt] += TMath::Cos(phiN*UpsGlauberCor->Phi())*IsUpsSurv_prob[iups];
+      Cos_raw_gl[nPt][count_gl[nPt]] = TMath::Cos(phiN*UpsGlauberCor->Phi())*IsUpsSurv_prob[iups];
       weight_gl[nPt][count_gl[nPt]] = IsUpsSurv_prob[iups];
       weight_s_gl[nPt]++;
       count_gl[nPt]++;
@@ -170,21 +170,21 @@ void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
     }
   }
 
-  //Calculate cos2Pi error
+  //Calculate cos error
   for(int ipt=0; ipt<=nPt;ipt++){
-    AvgCos2Pi_en[ipt] = AvgCos2Pi_en[ipt]/weight_s_en[ipt];
-    for(int ic=0; ic<count_en[ipt]; ic++){AvgCos2PiErr_en[ipt] += pow((Cos2Pi_raw_en[ipt][ic] - AvgCos2Pi_en[ipt])*weight_en[ipt][ic],2);}
-    AvgCos2PiErr_en[ipt] = sqrt(AvgCos2PiErr_en[ipt])/weight_s_en[ipt];
-    hPhi_allEvt_pt_cos2Pi_EnProf->SetBinContent(ipt+1, AvgCos2Pi_en[ipt]);
-    hPhi_allEvt_pt_cos2Pi_EnProf->SetBinError(ipt+1,AvgCos2PiErr_en[ipt]);
+    AvgCos_en[ipt] = AvgCos_en[ipt]/weight_s_en[ipt];
+    for(int ic=0; ic<count_en[ipt]; ic++){AvgCosErr_en[ipt] += pow((Cos_raw_en[ipt][ic] - AvgCos_en[ipt])*weight_en[ipt][ic],2);}
+    AvgCosErr_en[ipt] = sqrt(AvgCosErr_en[ipt])/weight_s_en[ipt];
+    hPhi_allEvt_pt_cos_EnProf->SetBinContent(ipt+1, AvgCos_en[ipt]);
+    hPhi_allEvt_pt_cos_EnProf->SetBinError(ipt+1,AvgCosErr_en[ipt]);
   }
 
   for(int ipt=0; ipt<=nPt;ipt++){
-    AvgCos2Pi_gl[ipt] = AvgCos2Pi_gl[ipt]/weight_s_gl[ipt];
-    for(int ic=0; ic<count_gl[ipt]; ic++){AvgCos2PiErr_gl[ipt] += pow((Cos2Pi_raw_gl[ipt][ic] - AvgCos2Pi_gl[ipt])*weight_gl[ipt][ic],2);}
-    AvgCos2PiErr_gl[ipt] = sqrt(AvgCos2PiErr_gl[ipt])/weight_s_gl[ipt];
-    hPhi_allEvt_pt_cos2Pi_Glauber->SetBinContent(ipt+1, AvgCos2Pi_gl[ipt]);
-    hPhi_allEvt_pt_cos2Pi_Glauber->SetBinError(ipt+1,AvgCos2PiErr_gl[ipt]);
+    AvgCos_gl[ipt] = AvgCos_gl[ipt]/weight_s_gl[ipt];
+    for(int ic=0; ic<count_gl[ipt]; ic++){AvgCosErr_gl[ipt] += pow((Cos_raw_gl[ipt][ic] - AvgCos_gl[ipt])*weight_gl[ipt][ic],2);}
+    AvgCosErr_gl[ipt] = sqrt(AvgCosErr_gl[ipt])/weight_s_gl[ipt];
+    hPhi_allEvt_pt_cos_Glauber->SetBinContent(ipt+1, AvgCos_gl[ipt]);
+    hPhi_allEvt_pt_cos_Glauber->SetBinError(ipt+1,AvgCosErr_gl[ipt]);
   }
 
 
@@ -204,8 +204,8 @@ void makePlots(int nrun= 10, int kInitPos = 1, int kDataSel=2)
 
   wf->cd();
   
-  hPhi_allEvt_pt_cos2Pi_EnProf->Write();
-  hPhi_allEvt_pt_cos2Pi_Glauber->Write();
+  hPhi_allEvt_pt_cos_EnProf->Write();
+  hPhi_allEvt_pt_cos_Glauber->Write();
   hRAA_npart->Write();
   hRAA_int->Write();
       

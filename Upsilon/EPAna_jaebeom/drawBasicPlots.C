@@ -4,11 +4,11 @@
 
 using namespace std;
 
-void drawBasicPlots(int nrun=10, int kInitPos=1)
+void drawBasicPlots(int nrun=10, int kInitPos=1, int phiN = 3)
 {
 
   setTDRStyle();
-  writeExtraText= true;
+  writeExtraText= false;
   int iPeriod = 999;
   int iPos = 33;
 
@@ -20,14 +20,14 @@ void drawBasicPlots(int nrun=10, int kInitPos=1)
   else if(kInitPos==1) fPosStr = "InitPosGlauber";
   else if(kInitPos==2) fPosStr = "InitPosMean";
 
-  TFile* rfout = new TFile(Form("outfile_UpsSkim_%s_0000_%04d.root",fPosStr,nrun),"read");
+  TFile* rfout = new TFile(Form("outfile_UpsSkim_PhiAng%d_%s_0000_%04d.root",phiN,fPosStr,nrun),"read");
   TTree* tree = (TTree*) rfout->Get("tree");
   if(nrun!= tree->GetEntries()){cout << "ERROR!! :::: Number of entries and runs inconsistent!!" << endl;return;}
   SetTree settree_;
   settree_.TreeSetting(tree);
   
   //Glauber
-  TFile* glf = new TFile("../MCGlauber-PbPb-5020GeV-b0-18fm.root","read");
+  TFile* glf = new TFile("../MCGlauber-PbPb-5020GeV-b0-18fm-bin100-v3.root","read");
 
   string savedir = Form("res/plots/%s_nRun%d",fPosStr,nrun);
   void * dirf = gSystem->OpenDirectory(savedir.c_str());
@@ -125,8 +125,8 @@ void drawBasicPlots(int nrun=10, int kInitPos=1)
     globtex_int->DrawLatex(lab_posx_,lab_posy_,"#bf{Energy density profile}"); 
     globtex_int->DrawLatex(lab_posx_,lab_posy_-lab_pos_diff_,Form("Npart = %d",Npart)); 
     globtex_int->DrawLatex(lab_posx_,lab_posy_-2*lab_pos_diff_,Form("b = %.2f fm",b)); 
-    globtex_int->DrawLatex(lab_posx_,lab_posy_-3*lab_pos_diff_,Form("#Psi_{2,EP}(En profile) = %.2f #circ",EPangEnProf*180/TMath::Pi())); 
-    globtex_int->DrawLatex(lab_posx_,lab_posy_-4*lab_pos_diff_,Form("#Psi_{2,EP}(Glauber) = %.2f #circ",EPangGlauber*180/TMath::Pi())); 
+    globtex_int->DrawLatex(lab_posx_,lab_posy_-3*lab_pos_diff_,Form("#Psi_{%d,EP}(En profile) = %.2f #circ",phiN,EPangEnProf*180/TMath::Pi())); 
+    globtex_int->DrawLatex(lab_posx_,lab_posy_-4*lab_pos_diff_,Form("#Psi_{%d,EP}(Glauber) = %.2f #circ",phiN,EPangGlauber*180/TMath::Pi())); 
     SHINCHONLegend( c_tempEnergy[ih], iPeriod, iPos, 1 );
   
     c_PosInit[ih]->cd();
@@ -134,8 +134,8 @@ void drawBasicPlots(int nrun=10, int kInitPos=1)
     globtex_int->DrawLatex(lab_posx_,lab_posy_,"#bf{Initial #varUpsilon(1S) position}"); 
     globtex_int->DrawLatex(lab_posx_,lab_posy_-lab_pos_diff_,Form("Npart = %d",Npart)); 
     globtex_int->DrawLatex(lab_posx_,lab_posy_-2*lab_pos_diff_,Form("b = %.2f fm",b)); 
-    globtex_int->DrawLatex(lab_posx_,lab_posy_-3*lab_pos_diff_,Form("#Psi_{2,EP}(En profile) = %.2f #circ",EPangEnProf*180/TMath::Pi())); 
-    globtex_int->DrawLatex(lab_posx_,lab_posy_-4*lab_pos_diff_,Form("#Psi_{2,EP}(Glauber) = %.2f #circ",EPangGlauber*180/TMath::Pi())); 
+    globtex_int->DrawLatex(lab_posx_,lab_posy_-3*lab_pos_diff_,Form("#Psi_{%d,EP}(En profile) = %.2f #circ",phiN,EPangEnProf*180/TMath::Pi())); 
+    globtex_int->DrawLatex(lab_posx_,lab_posy_-4*lab_pos_diff_,Form("#Psi_{%d,EP}(Glauber) = %.2f #circ",phiN,EPangGlauber*180/TMath::Pi())); 
     SHINCHONLegend( c_PosInit[ih], iPeriod, iPos,0 );
 
     c_PosFinal[ih]->cd();
@@ -147,9 +147,9 @@ void drawBasicPlots(int nrun=10, int kInitPos=1)
     globtex_int->DrawLatex(lab_posx_,lab_posy_-4*lab_pos_diff_,Form("#Psi_{2,EP}(Glauber) = %.2f #circ",EPangGlauber*180/TMath::Pi())); 
     SHINCHONLegend( c_PosFinal[ih], iPeriod, iPos, 1 );
 
-    c_tempEnergy[ih]->SaveAs(Form("%s/hist_TempEn_run%d.pdf",savedir.c_str(),ih));
-    c_PosInit[ih]->SaveAs(Form("%s/hist_UpsInitPos_run%d.pdf",savedir.c_str(),ih));
-    c_PosFinal[ih]->SaveAs(Form("%s/hist_UpsFinalPos_run%d.pdf",savedir.c_str(),ih));
+    c_tempEnergy[ih]->SaveAs(Form("%s/hist_TempEn_phiAng%d_run%d.pdf",savedir.c_str(),phiN,ih));
+    c_PosInit[ih]->SaveAs(Form("%s/hist_UpsInitPos_phiAng%d_run%d.pdf",savedir.c_str(),phiN,ih));
+    c_PosFinal[ih]->SaveAs(Form("%s/hist_UpsFinalPos_phiAng%d_run%d.pdf",savedir.c_str(),phiN,ih));
 
     TH2D* hinited_event = (TH2D*) glf->Get(Form("inited_event%d",ih));
     SetHistAxis(hinited_event,"x (fm)","y (fm)");
@@ -159,10 +159,10 @@ void drawBasicPlots(int nrun=10, int kInitPos=1)
     hinited_event->Draw("colz");
     globtex_int->DrawLatex(lab_posx_,lab_posy_,Form("Npart = %d, Ncoll = %d",Npart,Ncoll)); 
     globtex_int->DrawLatex(lab_posx_,lab_posy_-lab_pos_diff_,Form("b = %.2f fm",b)); 
-    globtex_int->DrawLatex(lab_posx_,lab_posy_-2*lab_pos_diff_,Form("#epsilon_{2} = %.3f",eccgaus[2])); 
-    globtex_int->DrawLatex(lab_posx_,lab_posy_-3*lab_pos_diff_,Form("#Psi_{2,EP}(Glauber) = %.2f #circ",EPangGlauber*180/TMath::Pi())); 
+    globtex_int->DrawLatex(lab_posx_,lab_posy_-2*lab_pos_diff_,Form("#epsilon_{%d} = %.3f",phiN,eccgaus[2])); 
+    globtex_int->DrawLatex(lab_posx_,lab_posy_-3*lab_pos_diff_,Form("#Psi_{%d,EP}(Glauber) = %.2f #circ",phiN,EPangGlauber*180/TMath::Pi())); 
     SHINCHONLegend( c_glb, iPeriod, iPos, 1); 
-    c_glb->SaveAs(Form("%s/hist_GlauberEvt_run%d.pdf",savedir.c_str(),ih));
+    c_glb->SaveAs(Form("%s/hist_GlauberEvt_phiAng%d_run%d.pdf",savedir.c_str(),phiN,ih));
 
     delete hinited_event;
     delete c_glb;
