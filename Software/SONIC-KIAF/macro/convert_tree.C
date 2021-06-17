@@ -14,8 +14,8 @@ using namespace std;
 void convert_tree(const char *ifname="output/default/cent0to5/oscar.dat", const char *ofname="outfile.root"){
 
 	int npart = 0;
-	int part_pid[2000];
-	float part_eta[2000], part_phi[2000], part_pt[2000];
+	int part_pid[10000];
+	float part_eta[10000], part_phi[10000], part_pt[10000];
 
 	TTree *T = new TTree("T","T");
 	T->Branch("npart",&npart,"npart/I");
@@ -49,7 +49,7 @@ void convert_tree(const char *ifname="output/default/cent0to5/oscar.dat", const 
 		//cout << evtnumber << " " << impactpar << endl;
 
 		npart = 0;
-		for (int ii=0; ii<2000; ii++){
+		for (int ii=0; ii<10000; ii++){
 			part_pid[ii] = 0;
 			part_eta[ii] = part_phi[ii] = part_pt[ii] = 0.0;
 		}
@@ -67,14 +67,16 @@ void convert_tree(const char *ifname="output/default/cent0to5/oscar.dat", const 
 			//MeV to GeV
 			TVector3 vec(pv[0]/1000., pv[1]/1000., pv[2]/1000.);
 
-			//if ( (abs(partid)==211 || abs(partid)==321 || abs(partid)==2212) && vec.Pt()>0 ){
-			if ( vec.Pt()>0 ){
+			if ( (abs(partid)==211 || abs(partid)==321 || abs(partid)==2212) && vec.Pt()>0 ){
+			//if ( vec.Pt()>0 ){
 				part_pid[npart] = partid;
 				part_eta[npart] = vec.Eta();
 				part_phi[npart] = vec.Phi();
 				part_pt[npart] = vec.Pt();
 				npart++;
 			}
+
+			if ( npart>=10000 ) break;
 		}//ipart
 
 		T->Fill();

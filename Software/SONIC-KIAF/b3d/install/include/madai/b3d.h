@@ -108,7 +108,8 @@ public:
 	\param[in] run_name_set This is the "run name" read in from the command line.
 	*/
 	CB3D(); // this is a constructor which does nothing but create an object
-	CB3D(string run_name_set, int ithread_set); // this gets all arrays ready
+	//CB3D(string run_name_set, int ithread_set); // this gets all arrays ready
+	CB3D(string run_name_set); // this gets all arrays ready
 	void InitArrays();
 	~CB3D();	//!< Destructor.
 	double tau,TAUCOLLMAX;

@@ -6,16 +6,22 @@ void CalOverlap(){
 	float xtarg[500], ytarg[500];
 	bool wproj[500], wtarg[500];
 
-	const int nset = 3;
+	float eccgaus[10];
 
-	const int nmaxA[nset] = {1, 1, 16};
-	const int nmaxB[nset] = {208, 16, 16};
+	const int nset = 1;
+
+	//const int nmaxA[nset] = {1, 1, 16};
+	//const int nmaxB[nset] = {208, 16, 16};
+	const int nmaxA[nset] = {1};
+	const int nmaxB[nset] = {197};
 
 	TFile *infile[nset];
 
-	infile[0] = new TFile("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-pPb-8160GeV-b0-10fm.root","read");
-	infile[1] = new TFile("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-pO-8160GeV-b0-10fm.root","read");
-	infile[2] = new TFile("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-OO-8160GeV-b0-10fm.root","read");
+	//infile[0] = new TFile("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-pPb-8160GeV-b0-10fm.root","read");
+	//infile[1] = new TFile("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-pO-8160GeV-b0-10fm.root","read");
+	//infile[2] = new TFile("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-OO-8160GeV-b0-10fm.root","read");
+
+	infile[0] = new TFile("MCGlauber-pAu-200GeV-b0-15fm-bin100-v2.root","read");
 
 
 	TH1D *hsT[nset];
@@ -24,6 +30,12 @@ void CalOverlap(){
 	TH1D *hsTw[nset];
 	TProfile *hsTw_b[nset];
 	TProfile *hsTw_npart[nset];
+
+	TProfile *he2w_b[nset];
+	TProfile *he2w_npart[nset];
+
+	TProfile *he3w_b[nset];
+	TProfile *he3w_npart[nset];
 
 
 	for (int iset=0; iset<nset; iset++){
@@ -35,6 +47,12 @@ void CalOverlap(){
 		hsTw_b[iset] = new TProfile(Form("hsTw_b_set%d",iset),"",50,0,10);
 		hsTw_npart[iset] = new TProfile(Form("hsTw_npart_set%d",iset),"",50,0,50);
 
+		he2w_b[iset] = new TProfile(Form("he2w_b_set%d",iset),"",50,0,10);
+		he2w_npart[iset] = new TProfile(Form("he2w_npart_set%d",iset),"",50,0,50);
+
+		he3w_b[iset] = new TProfile(Form("he3w_b_set%d",iset),"",50,0,10);
+		he3w_npart[iset] = new TProfile(Form("he3w_npart_set%d",iset),"",50,0,50);
+
 		TTree *T = (TTree*)infile[iset]->Get("lemon");
 		T->SetBranchAddress("nparta",&nparta);
 		T->SetBranchAddress("npartb",&npartb);
@@ -45,6 +63,7 @@ void CalOverlap(){
 		T->SetBranchAddress("xtarg",xtarg);
 		T->SetBranchAddress("ytarg",ytarg);
 		T->SetBranchAddress("wtarg",wtarg);
+		T->SetBranchAddress("eccgaus",eccgaus);
 
 		int nentries = T->GetEntries();
 
@@ -151,12 +170,18 @@ void CalOverlap(){
 				hsTw_npart[iset]->Fill(nparta+npartb, sTw);
 			}
 
+			he2w_b[iset]->Fill(b, eccgaus[2]);
+			he2w_npart[iset]->Fill(nparta+npartb, eccgaus[2]);
+
+			he3w_b[iset]->Fill(b, eccgaus[3]);
+			he3w_npart[iset]->Fill(nparta+npartb, eccgaus[3]);
+
 
 		}//ien
 
 	}//iset
 
-	TFile *outfile = new TFile("outfile_CalOverlap.root","recreate");
+	TFile *outfile = new TFile("outfile_CalOverlap_pAu.root","recreate");
 
 	for (int iset=0; iset<nset; iset++){
 		hsT[iset]->Write();
@@ -165,6 +190,13 @@ void CalOverlap(){
 		hsTw[iset]->Write();
 		hsTw_b[iset]->Write();
 		hsTw_npart[iset]->Write();
+
+		he2w_b[iset]->Write();
+		he2w_npart[iset]->Write();
+
+		he3w_b[iset]->Write();
+		he3w_npart[iset]->Write();
+
 	}
 
 }
