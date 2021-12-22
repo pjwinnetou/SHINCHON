@@ -285,7 +285,7 @@ void makeUpsTree(const int kInitPos = 1){
   int nNucl_proj = -1;
   int nNucl_targ = -1;
 
-  string Collision_system ("OO");
+  string Collision_system ("pPb_trento_p0");
  
   if(GlbFileName.find("PbPb") != string::npos){nNucl_proj=208; nNucl_targ=208;}
   else if(GlbFileName.find("pPb") != string::npos){nNucl_proj=1; nNucl_targ=208;}
@@ -295,8 +295,12 @@ void makeUpsTree(const int kInitPos = 1){
   else if(GlbFileName.find("pO") != string::npos){nNucl_proj=1; nNucl_targ=16;}
 
   TFile* infileGlauber;
-  if( Collision_system.find("pPb") || Collision_system.find("pO") || Collision_system.find("OO") ){
-    infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-8160GeV-b0-10fm.root",Collision_system.c_str()),"read");
+  if( ( Collision_system.find("pPb") || Collision_system.find("pO") || Collision_system.find("OO") ) && 
+    !Collision_system.find("trento") ){
+    infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-8160GeV-b0-10fm.root",Collision_system.c_str()),"read"); 
+  } else if( Collision_system.find("trento") ){
+    string collname = Collision_system.substr( 0, Collision_system.find("_"));
+    infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-8160GeV-b0-10fm.root",collname.c_str()),"read");
   } else{
     infileGlauber = new TFile(Form("../%s",GlbFileName.c_str()),"read");
   }
@@ -476,6 +480,8 @@ void makeUpsTree(const int kInitPos = 1){
     TFile* infileHydro;
     if( Collision_system.find("pPb") || Collision_system.find("pO") || Collision_system.find("OO") ){
       infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_8160GeV/superSONIC_profile_%s_8160GeV_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
+    } else{
+
     }
     TH1D *htimeHydro = (TH1D*)infileHydro->Get("Time");
     int ntimeHydro = (int)htimeHydro->GetEntries();
