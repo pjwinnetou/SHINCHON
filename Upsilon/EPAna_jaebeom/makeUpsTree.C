@@ -51,7 +51,8 @@ Double_t fTsallis_v2(Double_t *x, Double_t *fpar){
   return f;
 }
 
-void makeUpsTree(const int kInitPos = 1){
+void makeUpsTree( string Collision_system, int kInitPos = 1){
+
 
   gStyle->SetOptStat(0);
   gStyle->SetPalette(55);
@@ -285,7 +286,6 @@ void makeUpsTree(const int kInitPos = 1){
   int nNucl_proj = -1;
   int nNucl_targ = -1;
 
-  string Collision_system ("OO");
  
   if(GlbFileName.find("PbPb") != string::npos){nNucl_proj=208; nNucl_targ=208;}
   else if(GlbFileName.find("pPb") != string::npos){nNucl_proj=1; nNucl_targ=208;}
@@ -295,8 +295,14 @@ void makeUpsTree(const int kInitPos = 1){
   else if(GlbFileName.find("pO") != string::npos){nNucl_proj=1; nNucl_targ=16;}
 
   TFile* infileGlauber;
-  if( Collision_system.find("pPb") || Collision_system.find("pO") || Collision_system.find("OO") ){
-    infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-8160GeV-b0-10fm.root",Collision_system.c_str()),"read");
+  if( ( Collision_system.find("pPb") != string::npos || 
+	Collision_system.find("pO")  != string::npos ||
+	Collision_system.find("OO")  != string::npos) && 
+    Collision_system.find("trento") == string::npos){
+    infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-8160GeV-b0-10fm.root",Collision_system.c_str()),"read"); 
+  } else if( Collision_system.find("trento") != string::npos ){
+    string collname = Collision_system.substr( 0, Collision_system.find("_"));
+    infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-8160GeV-b0-10fm.root",collname.c_str()),"read");
   } else{
     infileGlauber = new TFile(Form("../%s",GlbFileName.c_str()),"read");
   }
@@ -474,8 +480,12 @@ void makeUpsTree(const int kInitPos = 1){
       hPosInit[irun-run_i] = new TH2D(Form("hPosInit_run%d",irun),"",100,-15,15,100,-15,15);
     }
     TFile* infileHydro;
-    if( Collision_system.find("pPb") || Collision_system.find("pO") || Collision_system.find("OO") ){
+    if( Collision_system.find("pPb") != string::npos || 
+	Collision_system.find("pO")  != string::npos ||
+	Collision_system.find("OO")  != string::npos ){
       infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_8160GeV/superSONIC_profile_%s_8160GeV_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
+    } else{
+
     }
     TH1D *htimeHydro = (TH1D*)infileHydro->Get("Time");
     int ntimeHydro = (int)htimeHydro->GetEntries();
@@ -487,6 +497,39 @@ void makeUpsTree(const int kInitPos = 1){
     b_ = b;
     for(int iecc=0;iecc<Necc;iecc++){eccgaus_[iecc] = eccgaus[iecc]; eccpoint_[iecc] = eccpoint[iecc];}
     TH2D* hGlauber = (TH2D*)infileGlauber->Get(Form("inited_event%d",irun));
+
+    ifstream fGlauber;
+    if( Collision_system.find("trento") == string::npos ){
+      if( Collision_system.find("pPb") != string::npos ){
+	fGlauber.open(Form("/alice/data/junleekim/SHINCHON/initedFiles_pPb_8160GeV_b0_10fm/event%d_9999.dat",irun));
+      } else if( Collision_system.find("pO") != string::npos ){
+	fGlauber.open(Form("/alice/data/junleekim/SHINCHON/initedFiles_pO_8160GeV_b0_10fm/event%d_9998.dat",irun));
+      } else if( Collision_system.find("OO") != string::npos ){
+	fGlauber.open(Form("/alice/data/junleekim/SHINCHON/initedFiles_OO_8160GeV_b0_10fm/event%d_9997.dat",irun));
+      }
+    } else if( Collision_system.find("trento") != string::npos ){
+      if( Collision_system.find("pPb") != string::npos ){
+	if( Collision_system.find("p0") != string::npos ){
+	  fGlauber.open(Form("/alice/data/shlim/SONIC/Trento_pPb_8160GeV_p0/event%d.dat",irun));
+	} else if( Collision_system.find("p1") != string::npos ){
+	  fGlauber.open(Form("/alice/data/shlim/SONIC/Trento_pPb_8160GeV_p1/event%d.dat",irun));
+	}
+      }
+    }
+
+    double ed;
+    int index_x=0;
+    int index_y=0;
+    while( fGlauber >> ed ){
+      hGlauber->SetBinContent( index_x+1, index_y+1, ed );
+      index_y++;
+      if( index_y == 100 ){
+        index_y = 0;
+        index_x++;
+      }
+    }
+    fGlauber.close();
+    
 
     meanX = 0.0;
     meanY = 0.0;
