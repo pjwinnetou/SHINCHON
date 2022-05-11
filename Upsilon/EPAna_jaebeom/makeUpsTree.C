@@ -51,7 +51,7 @@ Double_t fTsallis_v2(Double_t *x, Double_t *fpar){
   return f;
 }
 
-void makeUpsTree( string Collision_system, int kInitPos = 1){
+void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
 
 
   gStyle->SetOptStat(0);
@@ -69,7 +69,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
   const float PreHydroTempRatio = 1.20;
 
   const int run_i = 0;
-  const int run_f = 1000;
+  const int run_f = 50;
   const int nrun = (run_f-run_i);
   const float const_hbarc = 197.5; //MeV fm
 
@@ -78,7 +78,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
   const float const_mY[nstates] = {
 	9.46 ,10.02, 10.36 }; //GeV
   const float const_tau0Y[nstates] = {
-	0.5, 1.0, 1.5 }; //fm/c
+	0.6, 1.2, 1.8 }; //fm/c  20% increase than default
   const float const_TmaxY[nstates] = {
 	600.0, 240.0, 190.0}; //MeV
 
@@ -96,7 +96,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
 
   float f_tmp[20];
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/Gdiss0.dat");
+  fdata.open("../Gdiss0.dat");
   fdata.getline(buf,500);
 
   while ( fdata 
@@ -112,7 +112,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
 
   fdata.close();
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/Gdiss1.dat");
+  fdata.open("../Gdiss1.dat");
   fdata.getline(buf,500);
 
   while ( fdata 
@@ -146,7 +146,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
   }
 
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/diss_2s.dat");
+  fdata.open("../diss_2s.dat");
   fdata.getline(buf,500);
 
   while ( fdata
@@ -182,7 +182,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
     Gdiss[ii].clear();
   }
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/diss_3s.dat");
+  fdata.open("../diss_3s.dat");
   fdata.getline(buf,500);
 
   while ( fdata
@@ -402,7 +402,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
   TFile *outfile = new TFile(Form("./outfile_UpsSkim_PhiAng_%s_%.f_%s_%04d_%04d.root",Collision_system.c_str(),phiN_,fInitPos.c_str(),run_i,run_f),"recreate");
 
   static const long MAXTREESIZE = 1000000000;
-  static const long MaxUpsSize = 200000;
+ static const long MaxUpsSize = 100000;
 
   int runid;
   int nUps;
@@ -416,13 +416,14 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
   double EPangEnProf, EPangGlauber, EPangGlauberh;
   int Npart_;
   int Ncoll_;
+  int state_;
   float b_;
   float eccgaus_[Necc];
   float eccpoint_[Necc];
 
 
   TTree *tree = new TTree("tree","Upsilon Tree");
-  tree->SetMaxTreeSize(MAXTREESIZE);
+  //tree->SetMaxTreeSize(MAXTREESIZE);
   tree->Branch("run",&runid,"run/I");
   tree->Branch("nUps",&nUps,"nUps/I");
   tree->Branch("Ups4momRaw", "TClonesArray", &Ups4momRaw, 32000, 0);
@@ -436,6 +437,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
   tree->Branch("vy0",vy0_,"vy0[nUps]/D");
   tree->Branch("Npart",&Npart_,"Npart/I");
   tree->Branch("Ncoll",&Ncoll_,"Ncoll/I");
+  tree->Branch("UpsState",&state_,"UpsState/I");
   tree->Branch("b",&b_,"Ncoll/F");
   tree->Branch("eccgaus",eccgaus_,Form("eccgaus[%d]/F",Necc));
   tree->Branch("eccpoint",eccpoint_,Form("eccpoint[%d]/F",Necc));
@@ -448,8 +450,8 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
   TF2* smearing_function = new TF2("smear_tf2", "TMath::Exp(-(x*x+y*y)/(2.*[0]*[0]))/(2*TMath::Pi()*[0]*[0])", -100*sigs, 100*sigs, -100*sigs, 100*sigs);
   smearing_function->FixParameter(0,sigs);
 
-  const Double_t max_x = 10.0;
-  const int nSliceGlb = 300;
+  //const Double_t max_x = 10.0;
+  //const int nSliceGlb = 300;
   TH2D* hist_glauber_fine[nrun];
 
   float meanX = 0, meanY = 0;
@@ -497,6 +499,9 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
     b_ = b;
     for(int iecc=0;iecc<Necc;iecc++){eccgaus_[iecc] = eccgaus[iecc]; eccpoint_[iecc] = eccpoint[iecc];}
     TH2D* hGlauber = (TH2D*)infileGlauber->Get(Form("inited_event%d",irun));
+
+    const Double_t max_x = hGlauber->GetXaxis()->GetXmax();
+    const int nSliceGlb = hGlauber->GetNbinsX();
 
     ifstream fGlauber;
     if( Collision_system.find("trento") == string::npos ){
@@ -608,15 +613,19 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
         double yval_ = -max_x + max_x/nSliceGlb + 2*max_x/nSliceGlb*isly;
         long double content=0;
 
-        for(int in=0; in<nNucl; in++){
+	for(int in=0; in<nNucl; in++){
           if(wproj[in]==0) continue;
           if(in >= nNucl_proj) continue;
+	  if(xproj[in] > max_x || xproj[in] < -1*max_x) continue;
+	  if(yproj[in] > max_x || yproj[in] < -1*max_x) continue;
           content += smearing_function->Eval(xproj[in] - xval_, yproj[in] - yval_);
         }
 
         for(int in=0; in<nNucl; in++){
           if(wtarg[in]==0) continue;
           if(in >= nNucl_targ) continue;
+	  if(xtarg[in] > max_x || xtarg[in] <-1*max_x) continue;
+          if(ytarg[in] > max_x || ytarg[in] <-1*max_x) continue;
           content += smearing_function->Eval(xtarg[in] - xval_, ytarg[in] - yval_);
         }
 
@@ -668,9 +677,11 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
     cout << endl;
 
     for(int s=0;s<nstates;s++){
+      state_ = s+1;
       for (int iY=0; iY<nY; iY++){
         //Momentum
 	fInitialUpsilon->SetParameters(  1.06450e+00 ,  7.97649e-01 , 100, const_mY[s] );
+	ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-6); //to converge
         double pT = fInitialUpsilon->GetRandom();
         double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
         double px = pT*cos(phi);
@@ -791,7 +802,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
           totTime += dt;
 
         }//it
-/*
+
       	double velfx = (vx-vx0)/totTime;
       	double velfy = (vy-vy0)/totTime;
       	double pxf = getMom(velfx,const_mY[s]);
@@ -805,7 +816,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
 
       	double vxf = vxf_ + vx0;
       	double vyf = vyf_ + vy0;
-*/
+
 /*
       	if( abs(px-pxf) > 1e-5 || abs(py-pyf) > 1e-5){
           cout << "Inconsistent momentum diff > 1e-5 GeV/c" << endl;
@@ -832,7 +843,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
       	}
       
       	//Fill Upsilon position
-/*
+
       	double fphiAng;
       	if(pxf==0) fphiAng = 0;
       	else if(pxf>0 && pyf>=0) fphiAng = TMath::ATan(abs(pyf/pxf));
@@ -844,7 +855,7 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
       	hphi_finalMom[s]->Fill(fphiAng);
 
       
-      if( abs((fphiAng-fphiAng_)/fphiAng*100)>15){
+     /* if( abs((fphiAng-fphiAng_)/fphiAng*100)>15){
       cout << "-----COMP START----" << endl;
       cout << "Upsilon : " << iY << " (px,py), (vx,vy) : " << pxf << ", " << pyf << " -- " << vx << ", " << vy << endl;
       cout << "fphiAng(px,py), fphiAng(vx,vy) : " << fphiAng << ", " << fphiAng_ << endl;
@@ -869,13 +880,14 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
       }
       */
 
-/*
+
       	TLorentzVector* Ups4VRaw = new TLorentzVector;
       	TLorentzVector* Ups4VEnProfCor = new TLorentzVector;
       	TLorentzVector* Ups4VGlauberCor = new TLorentzVector;
       	Ups4VRaw->SetPtEtaPhiM(pT,0,phi,const_mY[s]);
       	Ups4VEnProfCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangEnProf, Ups4VRaw->M());
       	Ups4VGlauberCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangGlauber, Ups4VRaw->M());
+	//cout << Ups4VRaw->Pt()<< " " <<  Ups4VRaw->Eta() << "  " <<  Ups4VRaw->Phi() << " " << EPangGlauber << " " <<  Ups4VRaw->M() << endl;
       	new((*Ups4momRaw)[nUps])TLorentzVector(*Ups4VRaw);
       	new((*Ups4momEnProfCor)[nUps])TLorentzVector(*Ups4VEnProfCor);
       	new((*Ups4momGlauberCor)[nUps])TLorentzVector(*Ups4VGlauberCor);
@@ -885,14 +897,15 @@ void makeUpsTree( string Collision_system, int kInitPos = 1){
       	IsUpsSurv_modf[nUps] = modF;
       	IsUpsSurv_prob[nUps] = det_flg;
       	nUps++;
-*/
+
       }//iY
-    }
+	tree->Fill();
+    } //s
     
     infileHydro->Close();
     delete infileHydro;
 
-    tree->Fill();
+    //tree->Fill();
 
     outfile->cd();
     hTempEnergy[irun-run_i]->Write();
