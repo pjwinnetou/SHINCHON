@@ -69,7 +69,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
   const float PreHydroTempRatio = 1.20;
 
   const int run_i = 0;
-  const int run_f = 50;
+  const int run_f = 1000;
   const int nrun = (run_f-run_i);
   const float const_hbarc = 197.5; //MeV fm
 
@@ -96,7 +96,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
 
   float f_tmp[20];
 
-  fdata.open("../Gdiss0.dat");
+  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/Gdiss0.dat");
   fdata.getline(buf,500);
 
   while ( fdata 
@@ -112,7 +112,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
 
   fdata.close();
 
-  fdata.open("../Gdiss1.dat");
+  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/Gdiss1.dat");
   fdata.getline(buf,500);
 
   while ( fdata 
@@ -146,7 +146,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
   }
 
 
-  fdata.open("../diss_2s.dat");
+  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/diss_2s.dat");
   fdata.getline(buf,500);
 
   while ( fdata
@@ -182,7 +182,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
     Gdiss[ii].clear();
   }
 
-  fdata.open("../diss_3s.dat");
+  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/diss_3s.dat");
   fdata.getline(buf,500);
 
   while ( fdata
