@@ -51,7 +51,7 @@ Double_t fTsallis_v2(Double_t *x, Double_t *fpar){
   return f;
 }
 
-void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
+void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1, int irun=0, int frun=1000 ){
 
 
   gStyle->SetOptStat(0);
@@ -68,8 +68,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
 
   const float PreHydroTempRatio = 1.20;
 
-  const int run_i = 0;
-  const int run_f = 1000;
+  const int run_i = irun;
+  const int run_f = frun;
   const int nrun = (run_f-run_i);
   const float const_hbarc = 197.5; //MeV fm
 
