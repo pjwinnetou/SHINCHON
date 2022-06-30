@@ -462,7 +462,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1, int irun=0,
   float varXw, varYw, varXYw;
   double sTsq, sT;
 
-  TFile *fFeedDownFraction = new TFile("/alice/home/junleekim/work/SHINCHON_dev/Upsilon/EPAna_jaebeom/FeedDownRes/Results_FD_Bottomonium.root","read");
+  TFile *fFeedDownFraction = new TFile("/alice/data/junleekim/SHINCHON/FeedDownRes/Results_FD_Bottomonium.root","read");
   TF1 *fdFraction;
 
   for (int irun=run_i; irun<run_f; irun++){
