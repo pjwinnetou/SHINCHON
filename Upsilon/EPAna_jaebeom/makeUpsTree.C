@@ -69,7 +69,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
   const float PreHydroTempRatio = 1.20;
 
   const int run_i = 0;
-  const int run_f = 1000;
+  const int run_f = 1;
   const int nrun = (run_f-run_i);
   const float const_hbarc = 197.5; //MeV fm
 
@@ -96,7 +96,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
 
   float f_tmp[20];
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/Gdiss0.dat");
+  fdata.open("../Gdiss0.dat");
   fdata.getline(buf,500);
 
   while ( fdata 
@@ -112,7 +112,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
 
   fdata.close();
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/Gdiss1.dat");
+  fdata.open("../Gdiss1.dat");
   fdata.getline(buf,500);
 
   while ( fdata 
@@ -146,7 +146,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
   }
 
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/diss_2s.dat");
+  fdata.open("../diss_2s.dat");
   fdata.getline(buf,500);
 
   while ( fdata
@@ -182,7 +182,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
     Gdiss[ii].clear();
   }
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/diss_3s.dat");
+  fdata.open("../diss_3s.dat");
   fdata.getline(buf,500);
 
   while ( fdata
@@ -462,6 +462,9 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
   float varXw, varYw, varXYw;
   double sTsq, sT;
 
+  TFile *fFeedDownFraction = new TFile("FeedDownRes/Results_FD_Bottomonium.root","read");
+  TF1 *fdFraction;
+
   for (int irun=run_i; irun<run_f; irun++){
 
     hMult = (TH1D*)fMultOut->Get(Form("hMultDist_%d_0",irun));
@@ -671,13 +674,16 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
     cout << "EP Angle (Glauber hist) : " << EPangGlauberh << endl;
 
     
-    //Upsilon
+    //Upsilon-----------------------------------------------------------------------------------------
+   
     const int nY = nSAMP * Gncoll;
     cout << "nY : " << nY << endl;
     cout << endl;
 
+  
     for(int s=0;s<nstates;s++){
       state_ = s+1;
+      fdFraction = (TF1*) fFeedDownFraction->Get(Form("f%dstot",state_));
       for (int iY=0; iY<nY; iY++){
         //Momentum
 	fInitialUpsilon->SetParameters(  1.06450e+00 ,  7.97649e-01 , 100, const_mY[s] );
@@ -690,6 +696,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1){
 
 	int pTbin = int(pT);
       	if ( pT>=20 ) continue;
+        //cout << "state: " << state_ << "  pT: " << pT << "    Fraction: " <<  fdFraction->Eval(pT)  << "  test: " << gRandom->Rndm()<< endl;
+        if( gRandom->Rndm()*100 < fdFraction->Eval(pT) ) continue; //feeddown rejection
 	if( s>0 ) pTbin = int(pT/2);
 
 
