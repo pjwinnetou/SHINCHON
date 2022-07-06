@@ -51,7 +51,7 @@ Double_t fTsallis_v2(Double_t *x, Double_t *fpar){
   return f;
 }
 
-void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1, int irun=0, int frun=1000 ){
+void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 
 
   gStyle->SetOptStat(0);
@@ -68,8 +68,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1, int irun=0,
 
   const float PreHydroTempRatio = 1.20;
 
-  const int run_i = irun;
-  const int run_f = frun;
+  const int run_i = 0;
+  const int run_f = 1000;
   const int nrun = (run_f-run_i);
   const float const_hbarc = 197.5; //MeV fm
 
@@ -78,7 +78,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1, int irun=0,
   const float const_mY[nstates] = {
 	9.46 ,10.02, 10.36 }; //GeV
   const float const_tau0Y[nstates] = {
-	0.6, 1.2, 1.8 }; //fm/c  20% increase than default
+	0.5, 1.0, 1.5 }; //fm/c  20% increase than default
   const float const_TmaxY[nstates] = {
 	600.0, 240.0, 190.0}; //MeV
 
@@ -462,8 +462,6 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1, int irun=0,
   float varXw, varYw, varXYw;
   double sTsq, sT;
 
-  TFile *fFeedDownFraction = new TFile("/alice/data/junleekim/SHINCHON/FeedDownRes/Results_FD_Bottomonium.root","read");
-  TF1 *fdFraction;
 
   for (int irun=run_i; irun<run_f; irun++){
 
@@ -683,7 +681,6 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1, int irun=0,
   
     for(int s=0;s<nstates;s++){
       state_ = s+1;
-      fdFraction = (TF1*) fFeedDownFraction->Get(Form("f%dstot",state_));
       for (int iY=0; iY<nY; iY++){
         //Momentum
 	fInitialUpsilon->SetParameters(  1.06450e+00 ,  7.97649e-01 , 100, const_mY[s] );
@@ -697,7 +694,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1, int irun=0,
 	int pTbin = int(pT);
       	if ( pT>=20 ) continue;
         //cout << "state: " << state_ << "  pT: " << pT << "    Fraction: " <<  fdFraction->Eval(pT)  << "  test: " << gRandom->Rndm()<< endl;
-        if( gRandom->Rndm()*100 < fdFraction->Eval(pT) ) continue; //feeddown rejection
+//        if( gRandom->Rndm()*100 < fdFraction->Eval(pT) ) continue; //feeddown rejection
 	if( s>0 ) pTbin = int(pT/2);
 
 
