@@ -3,7 +3,7 @@
 
 using namespace std;
 
-void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, int kDataSel=0, bool isLine = false){
+void drawV2_pt(int fitor = 2, int nrun = 1000, int kInitPos=1, int kDataSel=1, bool isLine = true, int Ystate = 1,int fdContribution = 3){
 
   setTDRStyle();
   writeExtraText= false;
@@ -22,7 +22,9 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, int kDataSel=0, boo
   
   const int nData = 3;
   enum fData {CMS_502, CMS_276, STAR_200,};
-  const char* fDataStr[nData] = {"CMS502","CMS276","STAR200"};
+  //const char* fDataStr[nData] = {"CMS502","CMS276","STAR200"};
+  const char* fDataStr[nData] = {"pp","pPb","OO"};
+  const char* fFeedDownStr[5] = {"2S", "2S3S", "2S3S1P", "2S3S1P2P", "all"};
 
   const int nPt = 4;
   double ptBin[nPt+1] = {0, 3, 6, 12, 20};
@@ -32,17 +34,16 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, int kDataSel=0, boo
   double ymin = -0.005; double ymax = 0.015; double xmin = 0; double xmax = 20;
 
   //// read input file : value & stat.
-  TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_%s_%s_nRun%d.root",fitor,fDataStr[kDataSel],fPosStr,nrun),"read");
+  TFile *fV2res = new TFile(Form("../res/FitResults_v2_fitorder%d_%s_%s_nRun%d_%ds_FD%s.root",fitor,fDataStr[kDataSel],fPosStr,nrun,Ystate,fFeedDownStr[fdContribution]),"read");
 
   TH1D* hV2res[nPt];
   TF1* ftot[nPt];
   TF1* f_v1[nPt];
   TF1* f_v2[nPt];
   TF1* f_v3[nPt];
-  if(fitor==2) delete *f_v3;
 
-  TGraphErrors* gv2_fit = new TGraphErrors();
-  TGraphErrors* gv2_fit_err = new TGraphErrors();
+  TGraphErrors* gv2_fit = new TGraphErrors(); gv2_fit->SetName("gv2");
+  TGraphErrors* gv2_fit_err = new TGraphErrors(); gv2_fit_err->SetName("gv2_error");
 
   for(int ipt=0; ipt<nPt; ipt++){
     hV2res[ipt] = (TH1D*) fV2res->Get(Form("hPhi_allEvt_EPGlauber_pt%d",ipt));
@@ -115,7 +116,7 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, int kDataSel=0, boo
   leg->Draw("same");
 
   double lab_posx = 0.275; double lab_posy = 0.83; double lab_pos_diff = 0.269;
-  drawGlobText("PbPb, #sqrt{s_{NN}} = 5.02 TeV", lab_posx, lab_posy, 1, labtextsize);
+  drawGlobText("pPb, #sqrt{s_{NN}} = 8.16 TeV", lab_posx, lab_posy, 1, labtextsize);
   SHINCHONLegend(c1,iPeriod,iPos,drawInner);
   
   string savedir = Form("plots_%s",fPosStr);
@@ -145,20 +146,20 @@ void drawV2_pt(int fitor = 3, int nrun = 10, int kInitPos=1, int kDataSel=0, boo
     legf[ipt]= new TLegend(legposx1,legposy1,legposx2,legposy2);
     SetLegendStyle(legf[ipt]);
     legf[ipt]->SetTextSize(labtextsize);
-    legf[ipt]->AddEntry(hV2res[ipt],"#varUpsilon(1S) (#eta#approx0)","pe");
+    legf[ipt]->AddEntry(hV2res[ipt],"#varUpsilon(2S) (#eta#approx0)","pe");
     legf[ipt]->AddEntry(ftot[ipt],"Total fit","l");
     legf[ipt]->AddEntry(f_v1[ipt],"#it{v_{1}} component","l");
     legf[ipt]->AddEntry(f_v2[ipt],"#it{v_{2}} component","l");
     if(fitor==3) legf[ipt]->AddEntry(f_v3[ipt],"#it{v_{3}} component","l");
     legf[ipt]->Draw("same");
-    drawGlobText("PbPb, #sqrt{s_{NN}} = 5.02 TeV", lab_posx, lab_posy, 1, labtextsize);
+    drawGlobText("pPb, #sqrt{s_{NN}} = 8.16 TeV", lab_posx, lab_posy, 1, labtextsize);
     SHINCHONLegend(cf[ipt],iPeriod,iPos,drawInner);
     cf[ipt]->SaveAs(Form("%s/v2_fit_%s_pt%d.pdf",savedir.c_str(),fDataStr[kDataSel],ipt));
   }
 
-
-
-
+  TFile* wf = new TFile(Form("%s/v2_vs_pt_%s_isLine%d_%ds_FD%s.root",savedir.c_str(),fDataStr[kDataSel],isLine,Ystate,fFeedDownStr[fdContribution]),"recreate");
+  gv2_fit->Write();
+  gv2_fit_err->Write();
 
 	return;
 } 
