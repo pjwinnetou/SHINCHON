@@ -27,6 +27,7 @@ using namespace std;
   float b;
   float eccgaus[10];
   float eccpoint[10];
+  int UpsState;
   
 class SetTree
 {
@@ -71,6 +72,7 @@ void SetTree::TreeSetting(TTree* tree)
   tree->SetBranchAddress("b",&b);
   tree->SetBranchAddress("eccgaus",eccgaus);
   tree->SetBranchAddress("eccpoint",eccpoint);
+  tree->SetBranchAddress("UpsState",&UpsState);
 };
 
 void SetTree::VarVectSet(double varVect[nHist][nVar], int iups)
