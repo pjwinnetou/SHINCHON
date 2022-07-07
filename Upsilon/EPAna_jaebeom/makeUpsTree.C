@@ -156,6 +156,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   ){
     for (int ipt=0; ipt<11; ipt++){
       if ( f_tmp[ipt+1]>0 ){
+	cout << f_tmp[0] << endl;
 	T[ipt].push_back(f_tmp[0]);
 	Gdiss[ipt].push_back(f_tmp[ipt+1]);
       }
@@ -342,14 +343,23 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   TProfile *hprofRAA_pT_rl[nstates];
 
   TGraphErrors* gGdiss[nstates][100];
+  TF1* fGdiss[nstates][100];
+
   for(int i=0;i<21;i++){
     gGdiss[0][i] = (TGraphErrors*)gGdiss1S[i]->Clone();
+    fGdiss[0][i] = (TF1*)fGdiss1S[i]->Clone();
   }
   for(int i=0;i<11;i++){
-    if( gGdiss2S[i]->GetN() ) gGdiss[1][i] = (TGraphErrors*)gGdiss2S[i]->Clone();
+    if( gGdiss2S[i]->GetN() ){
+	gGdiss[1][i] = (TGraphErrors*)gGdiss2S[i]->Clone();
+	fGdiss[1][i] = (TF1*)fGdiss2S[i]->Clone();
+    }
   }
   for(int i=0;i<2;i++){
-    if( gGdiss3S[i]->GetN() ) gGdiss[2][i] = (TGraphErrors*)gGdiss3S[i]->Clone();
+    if( gGdiss3S[i]->GetN() ){
+	gGdiss[2][i] = (TGraphErrors*)gGdiss3S[i]->Clone();
+	fGdiss[2][i] = (TF1*)fGdiss3S[i]->Clone();
+    }
   }
 
   TF1 *fP[nstates];
@@ -733,8 +743,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
       	if( bPreQGP && s==0 ){
           float TPre = PreHydroTempRatio*hTHydro[0]->GetBinContent(hTHydro[0]->FindBin(vx, vy))*1000.;
           if( TPre>Tf && tau_form<0.3 ){
-            float GdissPre0 = gGdiss[s][pTbin]->Eval(TPre);
-            float GdissPre1 = gGdiss[s][pTbin+1]->Eval(TPre);
+            float GdissPre0 = fGdiss[s][pTbin]->Eval(TPre);
+            float GdissPre1 = fGdiss[s][pTbin+1]->Eval(TPre);
             float GdissPre = GdissPre0 + (GdissPre1 - GdissPre0)*(pT - pTbin);
 
 	    float dt = 0.3 - tau_form;
@@ -785,14 +795,14 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 	  float Gdiss0, Gdiss1, Gdiss, GdissRef;
 
 	  if( s!=2 ){
-            Gdiss0 = gGdiss[s][pTbin]->Eval((THydro0+THydro1)/2);
-            Gdiss1 = gGdiss[s][pTbin+1]->Eval((THydro0+THydro1)/2);
-            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin*(s+1) );  // for 1s and 2s
+            Gdiss0 = fGdiss[s][pTbin]->Eval((THydro0+THydro1)/2);
+            Gdiss1 = fGdiss[s][pTbin+1]->Eval((THydro0+THydro1)/2);
+            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*(double)(s+1) ) / (1.+s);  // for 1s and 2s
 	  } else if( s==2 ){
 	    GdissRef = fGdiss3S[0]->Eval((THydro0+THydro1)/2);
             Gdiss0 = GdissRef*(fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
             Gdiss1 = GdissRef*(fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
-            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin*2)/2.0;
+            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*2.)/2.0;
 	  }
 
 	  if( bPreRES && timeHydro[irun-run_i][it]<tau_form ){
