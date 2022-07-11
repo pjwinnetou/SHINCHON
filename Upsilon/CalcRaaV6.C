@@ -26,15 +26,16 @@ void CalcRaaV6(){
 
 	gRandom = new TRandom3(0);
 
-	const bool bDRAW = true; 
+	const bool bDRAW_Config = false; 
+	const bool bDRAW_Result = true; 
 	const bool bSAVE = false; 
 	const bool b2D = false;
 
-	const bool bPreQGP = false;
-	const bool bPreRES = false;
+	const bool bPreQGP = false; //should be off
+	const bool bPreRES = true;
 
 	const int run_i = 0;
-	const int run_f = 200;
+	const int run_f = 100;
 	const int nrun = 1000;
 	const float const_hbarc = 197.5; //MeV fm
 	const float const_mY1S = 9.46; //GeV
@@ -42,28 +43,31 @@ void CalcRaaV6(){
 	const float const_mY3S = 10.36; //GeV
 
 	//arXiv:1605.03561
+	//arXiv:2007.03939
+	//const int const_Opt = 0;
 	//const float const_TmaxY1S = 600.0; //MeV
 	//const float const_TmaxY2S = 230.0; //MeV
 	//const float const_TmaxY3S = 170.0; //MeV
-
 	//const float const_tau0Y1S = 0.2; //fm/c
 	//const float const_tau0Y2S = 0.4; //fm/c
 	//const float const_tau0Y3S = 0.6; //fm/c
+	//const float const_Tf = 160.0; //arXiv:2007.03939
+	//const float const_Tf = 192.0; //arXiv:1605.03561
 
 	//arXiv:1706.08670
+	const int const_Opt = 1;
 	const float const_tau0Y1S = 0.5; //fm/c
 	const float const_tau0Y2S = 1.0; //fm/c
 	const float const_tau0Y3S = 1.5; //fm/c
-
 	const float const_TmaxY1S = 600.0; //MeV
 	const float const_TmaxY2S = 240.0; //MeV
 	const float const_TmaxY3S = 190.0; //MeV
-
-	const int nSAMP = 2; //times Ncoll
+	const float const_Tf = 170.0;
+	
+	//nSAMP*nColl Ups per event
+	const int nSAMP = 1; //times Ncoll
 
 	const float npartmax = 450;
-	//const float Tf = 192.0;
-	const float Tf = 170.0;
 
 	ifstream fdata;
 
@@ -255,12 +259,24 @@ void CalcRaaV6(){
 		gCregen[ipt]->Fit(fCregen[ipt],"R0Q");
 	}
 
+	//dN/dt vs pT for various T
+	TH1D *hRregen[45];
+	
+	for (int iT=0; iT<45; iT++){
+		float Temp = 170 + (10*iT);
+		hRregen[iT] = new TH1D(Form("hRregen_T%03dMeV",int(Temp)),"",21,-0.5,20.5);
+
+		for (int ipt=0; ipt<21; ipt++){
+			hRregen[iT]->SetBinContent(ipt+1, fCregen[ipt]->Eval(Temp)/const_hbarc);
+		}//ipt
+	}//iT
+
 	TCanvas *c0;
 	TCanvas *c0_2S;
 	TCanvas *c0_3S;
 	TCanvas *c0_;
 
-	if ( bDRAW ){
+	if ( bDRAW_Config ){
 		c0 = new TCanvas("c0","c0",1.2*500,500);
 		SetPadStyle();
 
@@ -312,7 +328,7 @@ void CalcRaaV6(){
 
 	}
 
-	if ( bDRAW ){
+	if ( bDRAW_Config ){
 		c0_2S = new TCanvas("c0_2S","c0_2S",1.2*500,500);
 		SetPadStyle();
 
@@ -363,7 +379,7 @@ void CalcRaaV6(){
 		leg->Draw();
 	}
 
-	if ( bDRAW ){
+	if ( bDRAW_Config ){
 		c0_3S = new TCanvas("c0_3S","c0_3S",1.2*500,500);
 		SetPadStyle();
 
@@ -405,8 +421,11 @@ void CalcRaaV6(){
 		leg->Draw();
 	}
 
-	if ( bDRAW ){
-		c0_ = new TCanvas("c0_","c0_",1.2*500,500);
+	if ( bDRAW_Config ){
+		c0_ = new TCanvas("c0_","c0_",1.2*2*500,500);
+		c0_->Divide(2,1);
+
+		c0_->cd(1);
 		SetPadStyle();
 		gPad->SetTopMargin(0.05);
 
@@ -442,6 +461,70 @@ void CalcRaaV6(){
 			fCregen[ipt]->SetLineStyle(7);
 			fCregen[ipt]->Draw("same");
 		}
+
+		{
+			TLegend *leg = new TLegend(0.15,0.65,0.4,0.95);
+			leg->SetFillStyle(0);
+			leg->SetBorderSize(0);
+			leg->SetTextFont(43);
+			leg->SetTextSize(18);
+			leg->AddEntry("","#Upsilon(1S)","h");
+			leg->AddEntry(gCregen[0],"p_{T}=0 GeV/c","p");
+			leg->AddEntry(gCregen[5],"p_{T}=5 GeV/c","p");
+			leg->AddEntry(gCregen[10],"p_{T}=10 GeV/c","p");
+			leg->AddEntry(gCregen[15],"p_{T}=15 GeV/c","p");
+			leg->AddEntry(gCregen[20],"p_{T}=20 GeV/c","p");
+			leg->Draw();
+		}
+
+		c0_->cd(2);
+		SetPadStyle();
+		gPad->SetTopMargin(0.05);
+
+		htmp = (TH1D*)gPad->DrawFrame(0,0,20,2.0e-10);
+		SetHistoStyle("p_{T} (GeV/c)","dN_{reg}/dt (fm/c)^{-1}");
+
+		for (int ipt=0; ipt<44; ipt++){
+			hRregen[ipt]->SetLineWidth(1);
+			hRregen[ipt]->SetLineColorAlpha(kGray,0.3);
+			if ( ipt==3 ){
+				hRregen[ipt]->SetLineColor(2);
+				hRregen[ipt]->SetMarkerColor(2);
+			}else if ( ipt==13 ){
+				hRregen[ipt]->SetLineColor(kGreen+2);
+				hRregen[ipt]->SetMarkerColor(kGreen+2);
+			}else if ( ipt==23 ){
+				hRregen[ipt]->SetLineColor(kBlue);
+				hRregen[ipt]->SetMarkerColor(kBlue);
+			}else if ( ipt==33 ){
+				hRregen[ipt]->SetLineColor(kMagenta);
+				hRregen[ipt]->SetMarkerColor(kMagenta);
+			}else if ( ipt==43 ){
+				hRregen[ipt]->SetLineColor(1);
+				hRregen[ipt]->SetMarkerColor(1);
+			}
+			hRregen[ipt]->Draw("same");
+		}
+		hRregen[ 3]->Draw("same");
+		hRregen[13]->Draw("same");
+		hRregen[23]->Draw("same");
+		hRregen[33]->Draw("same");
+		hRregen[43]->Draw("same");
+
+		{
+			TLegend *leg = new TLegend(0.15,0.65,0.4,0.95);
+			leg->SetFillStyle(0);
+			leg->SetBorderSize(0);
+			leg->SetTextFont(43);
+			leg->SetTextSize(18);
+			leg->AddEntry("","#Upsilon(1S)","h");
+			leg->AddEntry(hRregen[ 3],"T=200 MeV","L");
+			leg->AddEntry(hRregen[13],"T=300 MeV","L");
+			leg->AddEntry(hRregen[23],"T=400 MeV","L");
+			leg->AddEntry(hRregen[33],"T=500 MeV","L");
+			leg->AddEntry(hRregen[43],"T=600 MeV","L");
+			leg->Draw();
+		}
 	}
 
 	//return;
@@ -457,7 +540,7 @@ void CalcRaaV6(){
 	fP3S->SetParameter(0, const_mY3S);
 
 	TCanvas *c1_;
-	if ( bDRAW ){
+	if ( bDRAW_Config ){
 		c1_ = new TCanvas("c1_","c1_",1.2*500,500);
 		SetPadStyle();
 		htmp = (TH1D*)gPad->DrawFrame(0,0,1,25);
@@ -519,10 +602,10 @@ void CalcRaaV6(){
 	TH1D *htau_form_Y2S = new TH1D("htau_form_Y2S","",100,0,2.5);
 	TH1D *htau_form_Y3S = new TH1D("htau_form_Y3S","",100,0,2.5);
 
-	TH1D *hpT_init = new TH1D("hpT_init","",100,0,20);
-	TH1D *hpT_final = new TH1D("hpT_final","",100,0,20);
-	TH1D *hpT_regen = new TH1D("hpT_regen","",100,0,20);
-	hpT_regen->Sumw2();
+	TH1D *hpT1S_i = new TH1D("hpT_i","",100,0,20);
+	TH1D *hpT1S_f = new TH1D("hpT_f","",100,0,20);
+	TH1D *hpT1S_r = new TH1D("hpT_r","",100,0,20);
+	hpT1S_r->Sumw2();
 
 	TProfile *hprofRAA1S_Npart_allpT = new TProfile("hprofRAA1S_Npart_allpT","",50,0,npartmax);
 	TProfile *hprofRAA2S_Npart_allpT = new TProfile("hprofRAA2S_Npart_allpT","",50,0,npartmax);
@@ -550,7 +633,28 @@ void CalcRaaV6(){
 	//Init
 	TF1 *fInitialUpsilon = new TF1("fInitialUpsilon",fTsallis1S_v2,0,30,3);
 	fInitialUpsilon -> SetParameters(  1.06450e+00 ,  7.97649e-01 , 100);
-	//Init
+
+	TF1 *fInitY = new TF1("fInitY","[2]*x/TMath::Power(((x/[1])*(x/[1])+1.),[0])",0,30);
+	fInitY->SetParameters(2.44, 6.05, 1);
+
+	TF1 *fInitb = new TF1("fInitb","[2]*x/TMath::Power(((x/[1])*(x/[1])+1.),[0])",0,30);
+	fInitb->SetParameters(2.85, 6.07, 1);
+
+	TCanvas *ctmp = new TCanvas("ctmp","ctmp");
+	fInitb->SetLineStyle(2);
+	fInitb->Draw("");
+	fInitY->Draw("same");
+
+	cout << "before: " << fInitb->Integral(0,30) << " " << fInitY->Integral(0,30) << endl;
+
+	fInitb->SetParameter(2, 1./fInitb->Integral(0,30));
+	fInitY->SetParameter(2, 1./fInitY->Integral(0,30));
+
+	cout << "after: " << fInitb->Integral(0,30) << " " << fInitY->Integral(0,30) << endl;
+
+	double nY_tot = 0.0;
+
+	//return;
 
 	for (int irun=run_i; irun<run_f; irun++){
 
@@ -581,13 +685,16 @@ void CalcRaaV6(){
 
 		const int nY = nSAMP * Gncoll;
 
+		nY_tot += nY;
+
 		//Upsilon
 		for (int iY=0; iY<nY; iY++){
 
 			//Momentum
 			//double pT = 20.0*gRandom->Rndm();
 			//double pT = 3.0;
-			double pT = fInitialUpsilon->GetRandom();
+			//double pT = fInitialUpsilon->GetRandom();
+			double pT = fInitY->GetRandom();
 			double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
 			double px = pT*cos(phi);
 			double py = pT*sin(phi);
@@ -607,8 +714,8 @@ void CalcRaaV6(){
 			if ( py<0 ) by *= -1;
 
 			TLorentzVector lvec;
-			//lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY1S*const_mY1S + pT*pT + pz*pz));
-			lvec.SetPxPyPzE(px, py, 0, mT);
+			lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY1S*const_mY1S + pT*pT + pz*pz));
+			//lvec.SetPxPyPzE(px, py, 0, mT);
 
 			//formation time
 			double tau_form = const_tau0Y1S*lvec.Gamma();
@@ -626,14 +733,12 @@ void CalcRaaV6(){
 
 			double det_flg = 1.0;
 
-			double Yregen = 0.0;
-
 			//Pre-QGP
 			if ( bPreQGP )
 			{
 				//approximation of 20% higher T in pre-hydro
 				float TPre = 1.2*hTHydro[0]->GetBinContent(hTHydro[0]->FindBin(vx, vy))*1000.;
-				if ( TPre>Tf && tau_form<0.3 ){
+				if ( TPre>const_Tf && tau_form<0.3 ){
 					float GdissPre0 = fGdiss[pTbin]->Eval(TPre);
 					float GdissPre1 = fGdiss[pTbin+1]->Eval(TPre);
 					float GdissPre = GdissPre0 + (GdissPre1 - GdissPre0)*(pT - pTbin);
@@ -674,7 +779,7 @@ void CalcRaaV6(){
 					break;
 				}
 
-				if ( (THydro0+THydro1)/2<Tf ){
+				if ( (THydro0+THydro1)/2<const_Tf ){
 					vx += dx;
 					vy += dy;
 					nFO++;
@@ -692,18 +797,10 @@ void CalcRaaV6(){
 				modF *= exp(-(dt)*Gdiss/const_hbarc);
 				if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
 
-				float Cregen0 = gCregen[pTbin]->Eval((THydro0+THydro1)/2);
-				float Cregen1 = gCregen[pTbin+1]->Eval((THydro0+THydro1)/2);
-				float Cregen = Cregen0 + (Cregen1 - Cregen0)*(pT - pTbin); 
-
-				Yregen += dt*Cregen/const_hbarc;
-
 				vx += dx;
 				vy += dy;
 
 			}//it
-
-			//cout << Yregen << endl;
 
 			if ( pT>2.0 && pT<4.0 ){
 				hprofRAA1S_Npart->Fill(Npart[irun], modF);
@@ -719,17 +816,17 @@ void CalcRaaV6(){
 			hprofRAA1S_pT->Fill(pT, modF);
 			hprofRAA1S_pT_rl->Fill(pT, det_flg );
 
-			hpT_init->Fill(pT);
+			hpT1S_i->Fill(pT);
 			if ( det_flg ){
-				hpT_final->Fill(pT);
+				hpT1S_f->Fill(pT);
 			}
-			hpT_regen->Fill(pT, Yregen);
 		}//iY
 
 		//Upsilon 2S
 		for (int iY=0; iY<nY; iY++){
 
-			double pT = fInitialUpsilon->GetRandom();
+			//double pT = fInitialUpsilon->GetRandom();
+			double pT = fInitY->GetRandom();
 			double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
 			double px = pT*cos(phi);
 			double py = pT*sin(phi);
@@ -749,8 +846,8 @@ void CalcRaaV6(){
 			if ( py<0 ) by *= -1;
 
 			TLorentzVector lvec;
-			//lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY2S*const_mY2S + pT*pT + pz*pz));
-			lvec.SetPxPyPzE(px, py, 0, mT);
+			lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY2S*const_mY2S + pT*pT + pz*pz));
+			//lvec.SetPxPyPzE(px, py, 0, mT);
 
 			//formation time
 			double tau_form = const_tau0Y2S*lvec.Gamma();
@@ -795,7 +892,7 @@ void CalcRaaV6(){
 					break;
 				}
 
-				if ( (THydro0+THydro1)/2<Tf ){
+				if ( (THydro0+THydro1)/2<const_Tf ){
 					vx += dx;
 					vy += dy;
 					nFO++;
@@ -825,13 +922,13 @@ void CalcRaaV6(){
 
 			hprofRAA2S_Npart_allpT->Fill(Npart[irun], modF);
 			hprofRAA2S_pT->Fill(pT, modF);
-
 		}//iY
 
 		//Upsilon 3S
 		for (int iY=0; iY<nY; iY++){
 
-			double pT = fInitialUpsilon->GetRandom();
+			//double pT = fInitialUpsilon->GetRandom();
+			double pT = fInitY->GetRandom();
 			double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
 			double px = pT*cos(phi);
 			double py = pT*sin(phi);
@@ -851,8 +948,8 @@ void CalcRaaV6(){
 			if ( py<0 ) by *= -1;
 
 			TLorentzVector lvec;
-			//lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY3S*const_mY3S + pT*pT + pz*pz));
-			lvec.SetPxPyPzE(px, py, 0, mT);
+			lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY3S*const_mY3S + pT*pT + pz*pz));
+			//lvec.SetPxPyPzE(px, py, 0, mT);
 
 			//formation time
 			double tau_form = const_tau0Y3S*lvec.Gamma();
@@ -897,7 +994,7 @@ void CalcRaaV6(){
 					break;
 				}
 
-				if ( (THydro0+THydro1)/2<Tf ){
+				if ( (THydro0+THydro1)/2<const_Tf ){
 					vx += dx;
 					vy += dy;
 					nFO++;
@@ -928,16 +1025,65 @@ void CalcRaaV6(){
 
 			hprofRAA3S_Npart_allpT->Fill(Npart[irun], modF);
 			hprofRAA3S_pT->Fill(pT, modF);
-
-
 		}//iY
+
+		/*
+		//Upsilon 1S (regeneration)
+		for (int ib=0; ib<nY; ib++){
+
+			//double pT = fInitialUpsilon->GetRandom();
+			double pT = fInitb->GetRandom();
+			double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
+			double px = pT*cos(phi);
+			double py = pT*sin(phi);
+
+			//Beta
+			double bx = fP1S->GetX(fabs(px)); 
+			double by = fP1S->GetX(fabs(py)); 
+
+			//Position
+			double vx, vy;
+			hGlauber->GetRandom2(vx, vy);
+
+			double vx0 = vx;
+			double vy0 = vy;
+
+			vx += bx*0.3;
+			vy += by*0.3;
+
+			//Time evolution
+			for (int it=0; it<ntimeHydro-1; it++){
+
+				float dt = timeHydro[irun][it+1] - timeHydro[irun][it];
+				float dx = bx*dt;
+				float dy = by*dt;
+
+				float THydro0 = hTHydro[it]->GetBinContent(hTHydro[it]->FindBin(vx, vy))*1000.;
+				float THydro1 = hTHydro[it+1]->GetBinContent(hTHydro[it+1]->FindBin(vx+dx, vy+dy))*1000.;
+
+				if ( (THydro0+THydro1)/2>const_TmaxY1S || (THydro0+THydro1)/2<Tf ){
+					continue;
+				}
+
+				int Tbin = int((THydro0+THydro1)/2 - 170.0)/10;
+
+				int pTregen = hRregen[Tbin]->GetRandom(); 
+				float Rregen = hRregen[Tbin]->GetBinContent(hRregen[Tbin]->FindBin(pTregen));
+
+				hpT1S_r->Fill(pTregen, Rregen*dt);
+
+				//cout << (THydro0+THydro1)/2 << " " << Tbin << endl;
+
+			}//it
+		}//ib
+		*/
 
 		infileHydro->Close();
 		delete infileHydro;
 
 	}
 
-	if ( bDRAW ){
+	if ( bDRAW_Result ){
 
 		TCanvas *c1 = new TCanvas("c1","c1",1.2*1*500,500);
 		SetPadStyle();
@@ -973,7 +1119,7 @@ void CalcRaaV6(){
 		leg->Draw();
 	}
 
-	if ( bDRAW ){
+	if ( bDRAW_Result ){
 
 		TCanvas *c2 = new TCanvas("c2","c2",1.2*2*500,500);
 		c2->Divide(2,1);
@@ -1021,7 +1167,7 @@ void CalcRaaV6(){
 		gRAA1S_FD->SetLineColorAlpha(1, 0.5);
 		gRAA1S_FD->SetLineWidth(3);
 		gRAA1S_FD->SetLineStyle(7);
-		gRAA1S_FD->Draw("C");
+		//gRAA1S_FD->Draw("C");
 
 		TGraphErrors *gRAA2S_FD = new TGraphErrors;
 		for (int ii=0; ii<hprofRAA2S_Npart_allpT->GetNbinsX(); ii++){
@@ -1038,7 +1184,7 @@ void CalcRaaV6(){
 		gRAA2S_FD->SetLineColorAlpha(2, 0.5);
 		gRAA2S_FD->SetLineWidth(3);
 		gRAA2S_FD->SetLineStyle(7);
-		gRAA2S_FD->Draw("C");
+		//gRAA2S_FD->Draw("C");
 
 		TLegend *leg = new TLegend(0.4,0.68,0.9,0.93);
 		leg->SetFillStyle(0);
@@ -1049,8 +1195,10 @@ void CalcRaaV6(){
 		leg->AddEntry(hprofRAA1S_Npart_allpT,Form("Y(1S)"),"L");
 		leg->AddEntry(hprofRAA2S_Npart_allpT,Form("Y(2S)"),"L");
 		leg->AddEntry(hprofRAA3S_Npart_allpT,Form("Y(3S)"),"L");
-		leg->AddEntry(gRAA1S_FD,Form("Y(1S), Feed down corrected"),"L");
-		leg->AddEntry(gRAA2S_FD,Form("Y(2S), Feed down corrected"),"L");
+		//leg->AddEntry(gRAA1S_FD,Form("Y(1S), Feed down corrected"),"L");
+		//leg->AddEntry(gRAA2S_FD,Form("Y(2S), Feed down corrected"),"L");
+		leg->AddEntry("","","");
+		leg->AddEntry("","","");
 		leg->Draw();
 
 
@@ -1065,9 +1213,9 @@ void CalcRaaV6(){
 		htmp->GetYaxis()->SetLabelSize(0.04);
 		htmp->GetYaxis()->SetTitleSize(0.05);
 
-		hprofRAA1S_pT->Rebin(5);
-		hprofRAA2S_pT->Rebin(5);
-		hprofRAA3S_pT->Rebin(5);
+		//hprofRAA1S_pT->Rebin(5);
+		//hprofRAA2S_pT->Rebin(5);
+		//hprofRAA3S_pT->Rebin(5);
 
 		hprofRAA1S_pT->SetLineColor(1);
 		hprofRAA1S_pT->SetLineWidth(2);
@@ -1096,7 +1244,7 @@ void CalcRaaV6(){
 		gRAA1S_pT_FD->SetLineColorAlpha(1, 0.5);
 		gRAA1S_pT_FD->SetLineWidth(3);
 		gRAA1S_pT_FD->SetLineStyle(7);
-		gRAA1S_pT_FD->Draw("C");
+		//gRAA1S_pT_FD->Draw("C");
 
 		TGraphErrors *gRAA2S_pT_FD = new TGraphErrors;
 		for (int ii=0; ii<hprofRAA2S_pT->GetNbinsX(); ii++){
@@ -1112,17 +1260,20 @@ void CalcRaaV6(){
 		gRAA2S_pT_FD->SetLineColorAlpha(2, 0.5);
 		gRAA2S_pT_FD->SetLineWidth(3);
 		gRAA2S_pT_FD->SetLineStyle(7);
-		gRAA2S_pT_FD->Draw("C");
+		//gRAA2S_pT_FD->Draw("C");
 
 		leg->Draw();
 
 		/*
-		TH1D *hRAA_pT_diss = (TH1D*)hpT_final->Clone("hRAA_pT_diss");
-		hRAA_pT_diss->Sumw2();
-		hRAA_pT_diss->Divide(hpT_init);
-		hRAA_pT_diss->SetMarkerStyle(24);
-		hRAA_pT_diss->Draw("p same");
 
+		TH1D *hRAA1S_pT_diss = (TH1D*)hpT1S_f->Clone("hRAA1S_pT_diss");
+		hRAA1S_pT_diss->Sumw2();
+		hRAA1S_pT_diss->Divide(hpT1S_i);
+		hRAA1S_pT_diss->SetMarkerStyle(24);
+		hRAA1S_pT_diss->Draw("p same");
+		*/
+
+		/*
 		TH1D *hRAA_pT_all = (TH1D*)hpT_final->Clone("hRAA_pT_all");
 		hRAA_pT_all->Sumw2();
 		hpT_regen->Scale(1000.*hpT_init->Integral());
@@ -1134,17 +1285,58 @@ void CalcRaaV6(){
 		hRAA_pT_all->Draw("p same");
 		*/
 
+		/*
+		hpT1S_i->Rebin(5);
+		hpT1S_f->Rebin(5);
+		hpT1S_r->Rebin(5);
+
+		TCanvas *c3 = new TCanvas("c3","c3",1.2*500,500);
+		SetPadStyle();
+		gPad->SetTicks();
+		gPad->SetLogy();
+		htmp = (TH1D*)gPad->DrawFrame(0,0.5,20,2*hpT1S_i->GetMaximum());
+		htmp->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+		htmp->GetXaxis()->SetLabelSize(0.04);
+		htmp->GetXaxis()->SetTitleSize(0.05);
+		htmp->GetYaxis()->SetTitle("N");
+		htmp->GetYaxis()->SetLabelSize(0.04);
+		htmp->GetYaxis()->SetTitleSize(0.05);
+
+		hpT1S_i->SetMarkerStyle(20);
+		hpT1S_i->SetMarkerColor(1);
+		hpT1S_i->SetLineColor(1);
+		hpT1S_i->Draw("p same");
+
+		hpT1S_f->SetMarkerStyle(24);
+		hpT1S_f->SetMarkerColor(1);
+		hpT1S_f->SetLineColor(1);
+		hpT1S_f->Draw("p same");
+
+		hpT1S_r->Scale(9.93*nY_tot/(2e-3));
+		hpT1S_r->SetMarkerStyle(21);
+		hpT1S_r->SetMarkerSize(0.8);
+		hpT1S_r->SetMarkerColor(1);
+		hpT1S_r->SetLineColor(1);
+		hpT1S_r->Draw("p same");
+		
+		cout << hpT1S_i->Integral() << endl;
+		cout << hpT1S_f->Integral() << endl;
+		cout << hpT1S_r->Integral() << endl;
+		*/
+
 	}
 
 	if ( bSAVE ){
 
-		TFile *outfile = new TFile(Form("outfile_RaaV2_%04d_%04d.root",run_i,run_f),"recreate");
+		TFile *outfile = new TFile(Form("outfile_RaaV6_%04d_%04d.root",run_i,run_f),"recreate");
 
 		hprofRAA1S_Npart->Write();
 		hprofRAA1S_pT->Write();
+		hprofRAA2S_pT->Write();
+		hprofRAA3S_pT->Write();
 		hprofRAA1S_Npart_allpT->Write();
 		hprofRAA2S_Npart_allpT->Write();
-		hprofRAA2S_Npart_allpT->Write();
+		hprofRAA3S_Npart_allpT->Write();
 
 		if ( b2D ){
 			for (int irun=run_i; irun<run_f; irun++){
