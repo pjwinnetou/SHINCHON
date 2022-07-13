@@ -23,7 +23,7 @@
 #include <fstream>
 #include <string>
 #include <dirent.h>
-#include <memory>
+//#include <memory>
 #include <cstddef>
 
 using namespace std;
@@ -63,8 +63,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   const bool bSAVE = true; 
   const bool b2D = false;
 
-  const bool bPreQGP = true;
-  const bool bPreRES = false;
+  const bool bPreQGP = false;
+  const bool bPreRES = true;
 
   const float PreHydroTempRatio = 1.20;
 
@@ -81,6 +81,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 	0.5, 1.0, 1.5 }; //fm/c  20% increase than default
   const float const_TmaxY[nstates] = {
 	600.0, 240.0, 190.0}; //MeV
+//	600.0, 600.0, 190.0}; //MeV
 
   const int nSAMP = 100; //times Ncoll
 
@@ -699,7 +700,10 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
         double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
         double px = pT*cos(phi);
         double py = pT*sin(phi);
+
+	double rap = 2.5*gRandom->Rndm();
         double mT = sqrt(pT*pT + const_mY[s]*const_mY[s]);
+	double pz = mT*sinh(rap);
 
 	int pTbin = int(pT);
       	if ( pT>=20 ) continue;
@@ -727,8 +731,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
       	}
 
       	TLorentzVector lvec;
-      	lvec.SetPxPyPzE(px, py, 0, mT);
-
+//      	lvec.SetPxPyPzE(px, py, 0, mT);
+	lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY[s]*const_mY[s] + pT*pT + pz*pz));
       	double tau_form = const_tau0Y[s]*lvec.Gamma();
 
       	double vx0 = vx;
@@ -769,20 +773,23 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
           float dx = bx*dt;
           float dy = by*dt;
 
-	  if ( !bPreRES && timeHydro[irun][it]<tau_form ){
-	    vx += dx;
-	    vy += dy;
-	    continue;
-	  }
 
           float THydro0 = hTHydro[it]->GetBinContent(hTHydro[it]->FindBin(vx, vy))*1000.;
           float THydro1 = hTHydro[it+1]->GetBinContent(hTHydro[it+1]->FindBin(vx+dx, vy+dy))*1000.;
 
-	  if ( (THydro0+THydro1)/2>const_TmaxY[s] ){
-	    modF = 0.0;
-	    det_flg = 0.0;
-	    break;
-	  }
+          float Gdiss0, Gdiss1, Gdiss, GdissRef;
+
+
+          if( s!=2 ){
+            Gdiss0 = fGdiss[s][pTbin]->Eval((THydro0+THydro1)/2);
+            Gdiss1 = fGdiss[s][pTbin+1]->Eval((THydro0+THydro1)/2);
+            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*(double)(s+1) ) / (1.+s);  // for 1s and 2s
+          } else if( s==2 ){
+            GdissRef = fGdiss3S[0]->Eval((THydro0+THydro1)/2);
+            Gdiss0 = GdissRef*(fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
+            Gdiss1 = GdissRef*(fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
+            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*2.)/2.0;
+          }
 
           if ( (THydro0+THydro1)/2<Tf ){
             vx += dx;
@@ -792,21 +799,20 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
             continue;
           }
 
-	  float Gdiss0, Gdiss1, Gdiss, GdissRef;
-
-	  if( s!=2 ){
-            Gdiss0 = fGdiss[s][pTbin]->Eval((THydro0+THydro1)/2);
-            Gdiss1 = fGdiss[s][pTbin+1]->Eval((THydro0+THydro1)/2);
-            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*(double)(s+1) ) / (1.+s);  // for 1s and 2s
-	  } else if( s==2 ){
-	    GdissRef = fGdiss3S[0]->Eval((THydro0+THydro1)/2);
-            Gdiss0 = GdissRef*(fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
-            Gdiss1 = GdissRef*(fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
-            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*2.)/2.0;
-	  }
-
-	  if( bPreRES && timeHydro[irun-run_i][it]<tau_form ){
-	    Gdiss *= timeHydro[irun-run_i][it]/tau_form;
+	  if( timeHydro[irun-run_i][it]<tau_form ){
+	    if( bPreRES ){
+	      Gdiss *= timeHydro[irun-run_i][it]/tau_form;
+	    } else {
+	      vx += dx;
+	      vy += dy;
+	      continue;
+	    }
+	  } else {
+	    if ( (THydro0+THydro1)/2>const_TmaxY[s] ){
+              modF = 0.0;  
+              det_flg = 0.0;
+              break;
+	    }
 	  }
 
           modF *= exp(-(dt)*Gdiss/const_hbarc);
