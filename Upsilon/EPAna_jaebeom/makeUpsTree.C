@@ -64,7 +64,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   const bool b2D = false;
 
   const bool bPreQGP = false;
-  const bool bPreRES = true;
+  const bool bPreRES = false; //false;
 
   const float PreHydroTempRatio = 1.20;
 
@@ -81,7 +81,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 	0.5, 1.0, 1.5 }; //fm/c  20% increase than default
   const float const_TmaxY[nstates] = {
 	600.0, 240.0, 190.0}; //MeV
-//	600.0, 600.0, 190.0}; //MeV
+//	600.0, 360.0, 300.0}; //MeV
+
 
   const int nSAMP = 100; //times Ncoll
 
@@ -331,8 +332,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   TH2D *hTHydro[1000];
   TGraphErrors *gTHydro[nrun];
   TF1 *fT2[nrun];
-  double timeHydro[nrun][300] = {0.0}; 
-  float errTHydro[nrun][300] = {0.0};
+  double timeHydro[nrun][3000] = {0.0}; 
+  float errTHydro[nrun][3000] = {0.0};
   float freezeT[nrun];
 
   TProfile *hprofRAA_Npart = new TProfile("hprofRAA_Npart","",40,0,400);
@@ -497,7 +498,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
     if( Collision_system.find("pPb") != string::npos || 
 	Collision_system.find("pO")  != string::npos ||
 	Collision_system.find("OO")  != string::npos ){
-      infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_8160GeV/superSONIC_profile_%s_8160GeV_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
+//      infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_8160GeV/superSONIC_profile_%s_8160GeV_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
+	infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_8160GeV_fine/superSONIC_profile_%s_8160GeV_fine_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
     } else{
 
     }
@@ -702,6 +704,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
         double py = pT*sin(phi);
 
 	double rap = 2.5*gRandom->Rndm();
+	rap = 0.0;
         double mT = sqrt(pT*pT + const_mY[s]*const_mY[s]);
 	double pz = mT*sinh(rap);
 
@@ -779,7 +782,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 
           float Gdiss0, Gdiss1, Gdiss, GdissRef;
 
-
+	  if( s>0 ) pTbin = int(pT/2);
+	  
           if( s!=2 ){
             Gdiss0 = fGdiss[s][pTbin]->Eval((THydro0+THydro1)/2);
             Gdiss1 = fGdiss[s][pTbin+1]->Eval((THydro0+THydro1)/2);
@@ -791,6 +795,15 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
             Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*2.)/2.0;
           }
 
+/*
+	  if( s==1 ){
+	     pTbin = (int)pT;
+	     Gdiss0 = fGdiss2S[0]->Eval((THydro0+THydro1)/2) * fGdiss[0][pTbin]->Eval((THydro0+THydro1)/2) / fGdiss[0][0]->Eval((THydro0+THydro1)/2);
+	     Gdiss1 = fGdiss2S[0]->Eval((THydro0+THydro1)/2) * fGdiss[0][pTbin+1]->Eval((THydro0+THydro1)/2) / fGdiss[0][0]->Eval((THydro0+THydro1)/2);
+	     Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*(double)(1.) ) / (1.);
+	  }
+*/
+
           if ( (THydro0+THydro1)/2<Tf ){
             vx += dx;
             vy += dy;
@@ -801,6 +814,12 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 
 	  if( timeHydro[irun-run_i][it]<tau_form ){
 	    if( bPreRES ){
+/*
+		pTbin = int(pT);
+		Gdiss0 = fGdiss[0][pTbin]->Eval((THydro0+THydro1)/2);
+		Gdiss1 = fGdiss[0][pTbin+1]->Eval((THydro0+THydro1)/2);
+		Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*(double)(1.) ) / (1.);
+*/
 	      Gdiss *= timeHydro[irun-run_i][it]/tau_form;
 	    } else {
 	      vx += dx;
@@ -816,8 +835,9 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 	  }
 
           modF *= exp(-(dt)*Gdiss/const_hbarc);
-          if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
-
+          if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ){
+	    det_flg = 0.0; break;
+	  }
           vx += dx;
           vy += dy;
           totTime += dt;
