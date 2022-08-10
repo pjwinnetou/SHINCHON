@@ -475,7 +475,13 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   double sTsq, sT;
 
 
+  TFile* fCentrality = new TFile("/alice/data/junleekim/SHINCHON/mult/outfile_Centrality_pPb_pO_OO_8TeV.root","read");
+  TH1D* hCentrality = (TH1D*)fCentrality->Get(Form("hCent_%s",Collision_system.c_str()));
+
+
   for (int irun=run_i; irun<run_f; irun++){
+
+    if( hCentrality->GetBinContent( irun+1 ) > 90 ) continue;
 
     hMult = (TH1D*)fMultOut->Get(Form("hMultDist_%d_0",irun));
 
