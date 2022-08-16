@@ -478,10 +478,11 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   TFile* fCentrality = new TFile("/alice/data/junleekim/SHINCHON/mult/outfile_Centrality_pPb_pO_OO_8TeV.root","read");
   TH1D* hCentrality = (TH1D*)fCentrality->Get(Form("hCent_%s",Collision_system.c_str()));
 
-
+  bool IsSelectedCent = true;
   for (int irun=run_i; irun<run_f; irun++){
 
-    if( hCentrality->GetBinContent( irun+1 ) > 90 ) continue;
+    IsSelectedCent = true;
+    if( hCentrality->GetBinContent( irun+1 ) > 90 ) IsSelectedCent = false;
 
     hMult = (TH1D*)fMultOut->Get(Form("hMultDist_%d_0",irun));
 
@@ -878,8 +879,10 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 */
 
       	hprofRAA_Npart_rl[s]->Fill( Npart_, det_flg );
-      	hprofRAA_mult_rl[s]->Fill( hMult->GetMean(), det_flg );
-      	hprofRAA_multST_rl[s]->Fill( hMult->GetMean()/sT, det_flg );
+	if( IsSelectedCent ){
+      	  hprofRAA_mult_rl[s]->Fill( hMult->GetMean(), det_flg );
+      	  hprofRAA_multST_rl[s]->Fill( hMult->GetMean()/sT, det_flg );
+	}
       	hprofRAA_pT_rl[s]->Fill( pT, det_flg );
 
       	if ( b2D ){
