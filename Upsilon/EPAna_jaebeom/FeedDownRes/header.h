@@ -171,8 +171,8 @@ void SetGraphAxisRange(TGraph* g1=0, double ptLow=0, double ptHigh=50, double yr
 
 void SetGraphAxisSetting(TGraph* g1=0, const char* xtitle = "", const char* ytitle="")
 {
-  g1->GetXaxis()->SetTitle("p_{T}^{#varUpsilon(1S)} (GeV/c)");
-  g1->GetYaxis()->SetTitle("Feed-down fraction (%)");
+  g1->GetXaxis()->SetTitle(xtitle);
+  g1->GetYaxis()->SetTitle(ytitle);
   g1->GetXaxis()->CenterTitle();
   g1->GetYaxis()->CenterTitle();
   g1->GetYaxis()->SetTitleOffset(1.2);
