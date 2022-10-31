@@ -6,9 +6,9 @@
 
 using namespace std;
 
-void FinalDrawV2(){
+void FinalDrawV2(const bool bHM=false){
 
-	const bool bSAVE = true;
+	const bool bSAVE = false;
 
 	setTDRStyle();
 
@@ -34,7 +34,11 @@ void FinalDrawV2(){
 	for (int isys=0; isys<nsyst; isys++){
 		for (int ista=0; ista<nstat; ista++){
 
-			infile[isys][ista] = new TFile(Form("v2input/v2_vs_pt_%s_isLine1_%ds_FDall.root",fname[isys],ista+1),"read");
+			if ( bHM ){
+				infile[isys][ista] = new TFile(Form("v2input/v2_vs_pt_%s_isLine1_%ds_FDall_HM.root",fname[isys],ista+1),"read");
+			}else{
+				infile[isys][ista] = new TFile(Form("v2input/v2_vs_pt_%s_isLine1_%ds_FDall.root",fname[isys],ista+1),"read");
+			}
 
 			gv2[isys][ista] = (TGraphErrors*) infile[isys][ista]->Get("gv2");
 			gv2_err[isys][ista] = (TGraphErrors*) infile[isys][ista]->Get("gv2_error");
@@ -47,7 +51,7 @@ void FinalDrawV2(){
 		}//ista
 	}//isys
 
-	double ymin = -0.01; double ymax = 0.03; double xmin = 0; double xmax = 20;
+	double ymin = -0.01; double ymax = 0.05; double xmin = 0; double xmax = 20;
 
 	TCanvas *c2[nstat];
 
@@ -71,14 +75,20 @@ void FinalDrawV2(){
 		gv2_err[1][i]->Draw("L3");
 		gv2_err[2][i]->Draw("L3");
 
-		TLegend *leg = new TLegend(0.45,0.93-0.06*4,0.85,0.93);
+		TLegend *leg = new TLegend(0.6,0.93-0.06*6,0.9,0.93);
 		SetLegendStyle(leg);
 		leg->SetFillStyle(0);
 		leg->SetBorderSize(0);
 		leg->SetTextFont(43);
 		leg->SetTextSize(20);
 		leg->SetMargin(0.3);
-		leg->AddEntry( (TObject*)0, Form("SHINCHON, #sqrt{#it{s}_{NN}} = 8 TeV, #varUpsilon(%dS)",i+1), "h");
+		leg->AddEntry( (TObject*)0, Form("SHINCHON"), "h");
+		if ( bHM ){
+			leg->AddEntry( (TObject*)0, Form("#sqrt{#it{s}_{NN}} = 8 TeV, 0-5%%"), "h");
+		}else{
+			leg->AddEntry( (TObject*)0, Form("#sqrt{#it{s}_{NN}} = 8 TeV, 0-100%%"), "h");
+		}
+		leg->AddEntry( (TObject*)0, Form("#varUpsilon(%dS)",i+1), "h");
 		leg->AddEntry(gv2_err[0][i], Form("%s",dname[0]), "LF");
 		leg->AddEntry(gv2_err[1][i], Form("%s",dname[1]), "LF");
 		leg->AddEntry(gv2_err[2][i], Form("%s",dname[2]), "LF");
@@ -86,7 +96,11 @@ void FinalDrawV2(){
 
 		if ( bSAVE ){
 			c2[i]->cd();
-			c2[i]->SaveAs(Form("NMFplots/V2_Pt_Y%dS.pdf",i+1));
+			if ( bHM ){
+				c2[i]->SaveAs(Form("NMFplots/V2_Pt_Y%dS_HM.pdf",i+1));
+			}else{
+				c2[i]->SaveAs(Form("NMFplots/V2_Pt_Y%dS.pdf",i+1));
+			}
 		}
 
 	}//
