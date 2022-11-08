@@ -11,6 +11,10 @@
 #include <TCanvas.h>
 #include <TGraphErrors.h>
 #include <TProfile2D.h>
+#include <TLegend.h>
+#include <TLorentzVector.h>
+#include <TH3.h>
+#include <TVector2.h>
 
 #include <iostream>
 #include <fstream>
@@ -26,16 +30,17 @@ void CalcRaaV7(){
 
 	gRandom = new TRandom3(0);
 
-	const bool bDRAW_Config = false; 
+	const bool bDRAW_Config = true; 
 	const bool bDRAW_Result = true; 
 	const bool bSAVE = false; 
 	const bool b2D = false;
 
 	const bool bPreQGP = false; //should be off
 	const bool bPreRES = false;
+	const bool bPTONLY = true;
 
 	const int run_i = 0;
-	const int run_f = 100;
+	const int run_f = 50;
 	const int nrun = 1000;
 	const float const_hbarc = 197.5; //MeV fm
 	const float const_mY1S = 9.46; //GeV
@@ -59,15 +64,21 @@ void CalcRaaV7(){
 	const float const_tau0Y1S = 0.5; //fm/c
 	const float const_tau0Y2S = 1.0; //fm/c
 	const float const_tau0Y3S = 1.5; //fm/c
+	//const float const_tau0Y1S = 0.; //fm/c
+	//const float const_tau0Y2S = 0.; //fm/c
+	//const float const_tau0Y3S = 0.; //fm/c
 	const float const_TmaxY1S = 600.0; //MeV
 	const float const_TmaxY2S = 240.0; //MeV
 	const float const_TmaxY3S = 190.0; //MeV
 	const float const_Tf = 170.0;
+
+	//ratio of Y1S to b-quark
+	const float const_ratio_Y_b = 1e-3;
 	
 	//nSAMP*nColl Ups per event
-	const int nSAMP = 1; //times Ncoll
+	const int nSAMP = 5; //times Ncoll
 
-	const float npartmax = 450;
+	const float npartmax = 500;
 
 	ifstream fdata;
 
@@ -267,17 +278,19 @@ void CalcRaaV7(){
 		hRregen[iT] = new TH1D(Form("hRregen_T%03dMeV",int(Temp)),"",21,-0.5,20.5);
 
 		for (int ipt=0; ipt<21; ipt++){
-			hRregen[iT]->SetBinContent(ipt+1, fCregen[ipt]->Eval(Temp)/const_hbarc);
+			//hRregen[iT]->SetBinContent(ipt+1, fCregen[ipt]->Eval(Temp)/const_hbarc);
+			hRregen[iT]->SetBinContent(ipt+1, fCregen[ipt]->Eval(Temp));
 		}//ipt
 	}//iT
 
 	TCanvas *c0;
-	TCanvas *c0_2S;
-	TCanvas *c0_3S;
 	TCanvas *c0_;
 
 	if ( bDRAW_Config ){
-		c0 = new TCanvas("c0","c0",1.2*500,500);
+		c0 = new TCanvas("c0","c0",1.2*3*500,500);
+		c0->Divide(3,1);
+
+		c0->cd(1);
 		SetPadStyle();
 
 		htmp = (TH1D*)gPad->DrawFrame(160,0,600,450);
@@ -329,7 +342,7 @@ void CalcRaaV7(){
 	}
 
 	if ( bDRAW_Config ){
-		c0_2S = new TCanvas("c0_2S","c0_2S",1.2*500,500);
+		c0->cd(2);
 		SetPadStyle();
 
 		htmp = (TH1D*)gPad->DrawFrame(160,0,300,450);
@@ -380,7 +393,7 @@ void CalcRaaV7(){
 	}
 
 	if ( bDRAW_Config ){
-		c0_3S = new TCanvas("c0_3S","c0_3S",1.2*500,500);
+		c0->cd(3);
 		SetPadStyle();
 
 		htmp = (TH1D*)gPad->DrawFrame(160,0,185,450);
@@ -539,6 +552,9 @@ void CalcRaaV7(){
 	TF1 *fP3S = new TF1("fP3S","[0]*x/sqrt(1-x*x)",0,1);
 	fP3S->SetParameter(0, const_mY3S);
 
+	TF1 *fPbq = new TF1("fPbq","[0]*x/sqrt(1-x*x)",0,1);
+	fPbq->SetParameter(0, 4.18);
+
 	TCanvas *c1_;
 	if ( bDRAW_Config ){
 		c1_ = new TCanvas("c1_","c1_",1.2*500,500);
@@ -584,17 +600,16 @@ void CalcRaaV7(){
 	TProfile2D *hprofRAA_xy_rl[nrun];
 
 	TProfile *hprofRAA1S_Npart = new TProfile("hprofRAA1S_Npart","",50,0,npartmax);
-	TProfile *hprofRAA1S_pT = new TProfile("hprofRAA1S_pT","",100,0,20);
-
 	TProfile *hprofRAA2S_Npart = new TProfile("hprofRAA2S_Npart","",50,0,npartmax);
-	TProfile *hprofRAA2S_pT = new TProfile("hprofRAA2S_pT","",100,0,20);
-
 	TProfile *hprofRAA3S_Npart = new TProfile("hprofRAA3S_Npart","",50,0,npartmax);
+
+	TProfile *hprofRAA1S_pT = new TProfile("hprofRAA1S_pT","",100,0,20);
+	TProfile *hprofRAA2S_pT = new TProfile("hprofRAA2S_pT","",100,0,20);
 	TProfile *hprofRAA3S_pT = new TProfile("hprofRAA3S_pT","",100,0,20);
 
-	TProfile *hprofRAA1S_Npart_rl = new TProfile("hprofRAA1S_Npart_rl","",50,0,npartmax);
 	TProfile *hprofRAA1S_pT_rl = new TProfile("hprofRAA1S_pT_rl","",100,0,20);
 
+	TProfile *hprofRAA1S_Npart_rl = new TProfile("hprofRAA1S_Npart_rl","",50,0,npartmax);
 	TProfile *hprofRAA2S_Npart_rl = new TProfile("hprofRAA2S_Npart_rl","",50,0,npartmax);
 	TProfile *hprofRAA3S_Npart_rl = new TProfile("hprofRAA3S_Npart_rl","",50,0,npartmax);
 
@@ -607,9 +622,9 @@ void CalcRaaV7(){
 	TH1D *hpT1S_r = new TH1D("hpT_r","",100,0,20);
 	hpT1S_r->Sumw2();
 
-	TProfile *hprofRAA1S_Npart_allpT = new TProfile("hprofRAA1S_Npart_allpT","",50,0,npartmax);
-	TProfile *hprofRAA2S_Npart_allpT = new TProfile("hprofRAA2S_Npart_allpT","",50,0,npartmax);
-	TProfile *hprofRAA3S_Npart_allpT = new TProfile("hprofRAA3S_Npart_allpT","",50,0,npartmax);
+	TProfile *hprofRAA1S_Npart_allpT = new TProfile("hprofRAA1S_Npart_allpT","",int(npartmax),0,npartmax);
+	TProfile *hprofRAA2S_Npart_allpT = new TProfile("hprofRAA2S_Npart_allpT","",int(npartmax),0,npartmax);
+	TProfile *hprofRAA3S_Npart_allpT = new TProfile("hprofRAA3S_Npart_allpT","",int(npartmax),0,npartmax);
 
 //****
 	const int nPtBin = 10;
@@ -640,17 +655,25 @@ void CalcRaaV7(){
 	TF1 *fInitb = new TF1("fInitb","[2]*x/TMath::Power(((x/[1])*(x/[1])+1.),[0])",0,30);
 	fInitb->SetParameters(2.85, 6.07, 1);
 
-	TCanvas *ctmp = new TCanvas("ctmp","ctmp");
-	fInitb->SetLineStyle(2);
-	fInitb->Draw("");
-	fInitY->Draw("same");
+	cout << "before: " << fInitialUpsilon->Integral(0.1,30) << " " << fInitb->Integral(0.1,30) << " " << fInitY->Integral(0.1,30) << endl;
 
-	cout << "before: " << fInitb->Integral(0,30) << " " << fInitY->Integral(0,30) << endl;
-
-	fInitb->SetParameter(2, 1./fInitb->Integral(0,30));
-	fInitY->SetParameter(2, 1./fInitY->Integral(0,30));
+	fInitb->SetParameter(2, fInitialUpsilon->Integral(0.1,30)/fInitb->Integral(0.1,30));
+	fInitY->SetParameter(2, fInitialUpsilon->Integral(0.1,30)/fInitY->Integral(0.1,30));
 
 	cout << "after: " << fInitb->Integral(0,30) << " " << fInitY->Integral(0,30) << endl;
+
+	if ( bDRAW_Config ){
+		TCanvas *ctmp = new TCanvas("ctmp","ctmp",1.2*500,500);
+		SetPadStyle();
+		htmp = (TH1D*)gPad->DrawFrame(0,1e-4,30,0.5);
+		gPad->SetLogy();
+		SetHistoStyle("p_{T} (GeV/c)","");
+		fInitb->SetLineStyle(2);
+		fInitb->Draw("same");
+		fInitY->Draw("same");
+		fInitialUpsilon->SetLineColor(4);
+		fInitialUpsilon->Draw("same");
+	}
 
 	double nY_tot = 0.0;
 
@@ -658,22 +681,29 @@ void CalcRaaV7(){
 
 	for (int irun=run_i; irun<run_f; irun++){
 
-		cout << "Scan event #" << irun << endl;
+		//Glauber info
+		TGlauber->GetEntry(irun);
+		Npart[irun] = Gnpart;
+
+		if ( Npart[irun]<350 ) continue;
+
+		cout << "Scan event #" << irun << ", npart: " << Gnpart << endl;
 
 		if ( b2D ){
 			hprofRAA_xy[irun] = new TProfile2D(Form("hprofRAA_xy_run%05d",irun),"",100,-15,15,100,-15,15);
 			hprofRAA_xy_rl[irun] = new TProfile2D(Form("hprofRAA_xy_rl_run%05d",irun),"",100,-15,15,100,-15,15);
 		}
 
-		//TFile *infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_pPb_8160GeV/superSONIC_profile_pPb_8160GeV_event%05d.root",irun),"read");
-		//TFile *infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_OO_8160GeV/superSONIC_profile_OO_8160GeV_event%05d.root",irun),"read");
 		TFile *infileHydro = new TFile(Form("/alice/data/shlim/SONIC/SONIC_profile_PbPb5TeV_0_18fm_t0_0_3_v2/SONIC_profile_PbPb5TeV_0_18fm_event%05d.root",irun),"read");
 		TH1D *htimeHydro = (TH1D*)infileHydro->Get("Time");
 		int ntimeHydro = (int)htimeHydro->GetEntries();
 
-		//Glauber info
-		TGlauber->GetEntry(irun);
-		Npart[irun] = Gnpart;
+		if ( ntimeHydro<1 ){
+			cout << "skip run of too short time steps, " << ntimeHydro << endl;
+			infileHydro->Close();
+			delete infileHydro;
+			continue;
+		}
 
 		TH2D *hGlauber = (TH2D*)infileGlauber->Get(Form("inited_event%d",irun));
 
@@ -714,12 +744,15 @@ void CalcRaaV7(){
 			if ( py<0 ) by *= -1;
 
 			TLorentzVector lvec;
-			lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY1S*const_mY1S + pT*pT + pz*pz));
-			//lvec.SetPxPyPzE(px, py, 0, mT);
+			if ( bPTONLY ){
+				lvec.SetPxPyPzE(px, py, 0, mT);
+			}else{
+				lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY1S*const_mY1S + pT*pT + pz*pz));
+			}
 
 			//formation time
-			double tau_form = const_tau0Y1S*lvec.Gamma();
-			htau_form_Y1S->Fill(tau_form);
+			double tau_formY1S = const_tau0Y1S*lvec.Gamma();
+			htau_form_Y1S->Fill(tau_formY1S);
 
 			//Position
 			double vx, vy;
@@ -738,12 +771,12 @@ void CalcRaaV7(){
 			{
 				//approximation of 20% higher T in pre-hydro
 				float TPre = 1.2*hTHydro[0]->GetBinContent(hTHydro[0]->FindBin(vx, vy))*1000.;
-				if ( TPre>const_Tf && tau_form<0.3 ){
+				if ( TPre>const_Tf && tau_formY1S<0.3 ){
 					float GdissPre0 = fGdiss[pTbin]->Eval(TPre);
 					float GdissPre1 = fGdiss[pTbin+1]->Eval(TPre);
 					float GdissPre = GdissPre0 + (GdissPre1 - GdissPre0)*(pT - pTbin);
 
-					float dt = 0.3 - tau_form;
+					float dt = 0.3 - tau_formY1S;
 					modF = exp(-(dt)*GdissPre/const_hbarc);
 					if( exp(-(dt)*GdissPre/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
 
@@ -766,9 +799,9 @@ void CalcRaaV7(){
 				float THydro0 = hTHydro[it]->GetBinContent(hTHydro[it]->FindBin(vx, vy))*1000.;
 				float THydro1 = hTHydro[it+1]->GetBinContent(hTHydro[it+1]->FindBin(vx+dx, vy+dy))*1000.;
 
-				float Gdiss0 = fGdiss[pTbin]->Eval((THydro0+THydro1)/2);
-				float Gdiss1 = fGdiss[pTbin+1]->Eval((THydro0+THydro1)/2);
-				float Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin); 
+				float Gdiss0_1S = fGdiss[pTbin]->Eval((THydro0+THydro1)/2);
+				float Gdiss1_1S = fGdiss[pTbin+1]->Eval((THydro0+THydro1)/2);
+				float Gdiss_1S = Gdiss0_1S + (Gdiss1_1S - Gdiss0_1S)*(pT - pTbin); 
 
 				if ( (THydro0+THydro1)/2<const_Tf ){
 					vx += dx;
@@ -777,10 +810,10 @@ void CalcRaaV7(){
 					continue;
 				}
 
-				if ( timeHydro[irun][it]<tau_form ){
+				if ( timeHydro[irun][it]<tau_formY1S ){
 					//before formation time
 					if ( bPreRES ){
-						Gdiss *= timeHydro[irun][it]/tau_form;
+						Gdiss_1S *= timeHydro[irun][it]/tau_formY1S;
 					}else{
 						vx += dx;
 						vy += dy;
@@ -798,8 +831,8 @@ void CalcRaaV7(){
 
 				}
 
-				modF *= exp(-(dt)*Gdiss/const_hbarc);
-				if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+				modF *= exp(-(dt)*Gdiss_1S/const_hbarc);
+				if( exp(-(dt)*Gdiss_1S/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
 
 				vx += dx;
 				vy += dy;
@@ -821,7 +854,7 @@ void CalcRaaV7(){
 			hprofRAA1S_pT_rl->Fill(pT, det_flg );
 
 			hpT1S_i->Fill(pT);
-			if ( det_flg ){
+			if ( det_flg>0.5 ){
 				hpT1S_f->Fill(pT);
 			}
 		}//iY
@@ -850,12 +883,16 @@ void CalcRaaV7(){
 			if ( py<0 ) by *= -1;
 
 			TLorentzVector lvec;
-			lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY2S*const_mY2S + pT*pT + pz*pz));
-			//lvec.SetPxPyPzE(px, py, 0, mT);
+			if ( bPTONLY ){
+				lvec.SetPxPyPzE(px, py, 0, mT);
+			}else{
+				lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY2S*const_mY2S + pT*pT + pz*pz));
+			}
 
 			//formation time
-			double tau_form = const_tau0Y2S*lvec.Gamma();
-			htau_form_Y2S->Fill(tau_form);
+			double tau_formY1S = const_tau0Y1S*lvec.Gamma();
+			double tau_formY2S = const_tau0Y2S*lvec.Gamma();
+			htau_form_Y2S->Fill(tau_formY2S);
 
 			//Position
 			double vx, vy;
@@ -884,9 +921,13 @@ void CalcRaaV7(){
 				float THydro0 = hTHydro[it]->GetBinContent(hTHydro[it]->FindBin(vx, vy))*1000.;
 				float THydro1 = hTHydro[it+1]->GetBinContent(hTHydro[it+1]->FindBin(vx+dx, vy+dy))*1000.;
 
-				float Gdiss0 = fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2);
-				float Gdiss1 = fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2);
-				float Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin*2)/2.0; 
+				float Gdiss0_1S = fGdiss[pTbin]->Eval((THydro0+THydro1)/2);
+				float Gdiss1_1S = fGdiss[pTbin+1]->Eval((THydro0+THydro1)/2);
+				float Gdiss_1S = Gdiss0_1S + (Gdiss1_1S - Gdiss0_1S)*(pT - pTbin*2)/2.0; 
+
+				float Gdiss0_2S = fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2);
+				float Gdiss1_2S = fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2);
+				float Gdiss_2S = Gdiss0_2S + (Gdiss1_2S - Gdiss0_2S)*(pT - pTbin*2)/2.0; 
 
 				if ( (THydro0+THydro1)/2<const_Tf ){
 					vx += dx;
@@ -895,10 +936,11 @@ void CalcRaaV7(){
 					continue;
 				}
 
-				if ( timeHydro[irun][it]<tau_form ){
+				if ( timeHydro[irun][it]<tau_formY2S ){
 					//before formation time
 					if ( bPreRES ){
-						Gdiss *= timeHydro[irun][it]/tau_form;
+						Gdiss_1S *= timeHydro[irun][it]/tau_formY1S;
+						Gdiss_2S *= timeHydro[irun][it]/tau_formY2S;
 					}else{
 						vx += dx;
 						vy += dy;
@@ -915,8 +957,17 @@ void CalcRaaV7(){
 
 				}
 
-				modF *= exp(-(dt)*Gdiss/const_hbarc);
-				if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+				/*
+				if ( timeHydro[irun][it]<tau_formY1S ){
+					modF *= exp(-(dt)*Gdiss_1S/const_hbarc);
+					if( exp(-(dt)*Gdiss_1S/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+				}else{
+					modF *= exp(-(dt)*Gdiss_2S/const_hbarc);
+					if( exp(-(dt)*Gdiss_2S/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+				}
+				*/
+				modF *= exp(-(dt)*Gdiss_2S/const_hbarc);
+				if( exp(-(dt)*Gdiss_2S/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
 
 				vx += dx;
 				vy += dy;
@@ -956,12 +1007,17 @@ void CalcRaaV7(){
 			if ( py<0 ) by *= -1;
 
 			TLorentzVector lvec;
-			lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY3S*const_mY3S + pT*pT + pz*pz));
-			//lvec.SetPxPyPzE(px, py, 0, mT);
+			if ( bPTONLY ){
+				lvec.SetPxPyPzE(px, py, 0, mT);
+			}else{
+				lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY3S*const_mY3S + pT*pT + pz*pz));
+			}
 
 			//formation time
-			double tau_form = const_tau0Y3S*lvec.Gamma();
-			htau_form_Y3S->Fill(tau_form);
+			double tau_formY1S = const_tau0Y1S*lvec.Gamma();
+			double tau_formY2S = const_tau0Y2S*lvec.Gamma();
+			double tau_formY3S = const_tau0Y3S*lvec.Gamma();
+			htau_form_Y3S->Fill(tau_formY3S);
 
 			//Position
 			double vx, vy;
@@ -990,10 +1046,18 @@ void CalcRaaV7(){
 				float THydro0 = hTHydro[it]->GetBinContent(hTHydro[it]->FindBin(vx, vy))*1000.;
 				float THydro1 = hTHydro[it+1]->GetBinContent(hTHydro[it+1]->FindBin(vx+dx, vy+dy))*1000.;
 
+				float Gdiss0_1S = fGdiss[pTbin]->Eval((THydro0+THydro1)/2);
+				float Gdiss1_1S = fGdiss[pTbin+1]->Eval((THydro0+THydro1)/2);
+				float Gdiss_1S = Gdiss0_1S + (Gdiss1_1S - Gdiss0_1S)*(pT - pTbin*2)/2.0; 
+
+				float Gdiss0_2S = fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2);
+				float Gdiss1_2S = fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2);
+				float Gdiss_2S = Gdiss0_2S + (Gdiss1_2S - Gdiss0_2S)*(pT - pTbin*2)/2.0; 
+
 				float GdissRef = fGdiss3S[0]->Eval((THydro0+THydro1)/2);
-				float Gdiss0 = GdissRef*(fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
-				float Gdiss1 = GdissRef*(fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
-				float Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin*2)/2.0; 
+				float Gdiss0_3S = GdissRef*(fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
+				float Gdiss1_3S = GdissRef*(fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
+				float Gdiss_3S = Gdiss0_3S + (Gdiss1_3S - Gdiss0_3S)*(pT - pTbin*2)/2.0; 
 
 				if ( (THydro0+THydro1)/2<const_Tf ){
 					vx += dx;
@@ -1002,10 +1066,12 @@ void CalcRaaV7(){
 					continue;
 				}
 
-				if ( timeHydro[irun][it]<tau_form ){
+				if ( timeHydro[irun][it]<tau_formY3S ){
 					//before formation time
 					if ( bPreRES ){
-						Gdiss *= timeHydro[irun][it]/tau_form;
+						Gdiss_1S *= timeHydro[irun][it]/tau_formY1S;
+						Gdiss_2S *= timeHydro[irun][it]/tau_formY2S;
+						Gdiss_3S *= timeHydro[irun][it]/tau_formY3S;
 					}else{
 						vx += dx;
 						vy += dy;
@@ -1022,8 +1088,20 @@ void CalcRaaV7(){
 
 				}
 				
-				modF *= exp(-(dt)*Gdiss/const_hbarc);
-				if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+				/*
+				if ( timeHydro[irun][it]<tau_formY1S ){
+					modF *= exp(-(dt)*Gdiss_1S/const_hbarc);
+					if( exp(-(dt)*Gdiss_1S/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+				}else if ( timeHydro[irun][it]<tau_formY2S ){
+					modF *= exp(-(dt)*Gdiss_2S/const_hbarc);
+					if( exp(-(dt)*Gdiss_2S/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+				}else{
+					modF *= exp(-(dt)*Gdiss_3S/const_hbarc);
+					if( exp(-(dt)*Gdiss_3S/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+				}
+				*/
+				modF *= exp(-(dt)*Gdiss_3S/const_hbarc);
+				if( exp(-(dt)*Gdiss_3S/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
 
 				vx += dx;
 				vy += dy;
@@ -1039,19 +1117,22 @@ void CalcRaaV7(){
 			hprofRAA3S_pT->Fill(pT, modF);
 		}//iY
 
-		/*
 		//Upsilon 1S (regeneration)
 		for (int ib=0; ib<nY; ib++){
 
 			//double pT = fInitialUpsilon->GetRandom();
+			//double pT = fInitY->GetRandom();
 			double pT = fInitb->GetRandom();
 			double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
 			double px = pT*cos(phi);
 			double py = pT*sin(phi);
 
 			//Beta
-			double bx = fP1S->GetX(fabs(px)); 
-			double by = fP1S->GetX(fabs(py)); 
+			double bx = fPbq->GetX(fabs(px)); 
+			double by = fPbq->GetX(fabs(py)); 
+
+			if ( px<0 ) bx *= -1;
+			if ( py<0 ) by *= -1;
 
 			//Position
 			double vx, vy;
@@ -1063,8 +1144,12 @@ void CalcRaaV7(){
 			vx += bx*0.3;
 			vy += by*0.3;
 
+			int nFO = 0;
+
 			//Time evolution
 			for (int it=0; it<ntimeHydro-1; it++){
+
+				if ( nFO>=10 ) break;
 
 				float dt = timeHydro[irun][it+1] - timeHydro[irun][it];
 				float dx = bx*dt;
@@ -1073,22 +1158,30 @@ void CalcRaaV7(){
 				float THydro0 = hTHydro[it]->GetBinContent(hTHydro[it]->FindBin(vx, vy))*1000.;
 				float THydro1 = hTHydro[it+1]->GetBinContent(hTHydro[it+1]->FindBin(vx+dx, vy+dy))*1000.;
 
-				if ( (THydro0+THydro1)/2>const_TmaxY1S || (THydro0+THydro1)/2<Tf ){
+				if ( (THydro0+THydro1)/2>const_TmaxY1S ){
+					vx += dx;
+					vy += dy;
+					continue;
+				}else if ( (THydro0+THydro1)/2<const_Tf ){
+					vx += dx;
+					vy += dy;
+					nFO++;
 					continue;
 				}
 
 				int Tbin = int((THydro0+THydro1)/2 - 170.0)/10;
+				float pTregen = hRregen[Tbin]->GetRandom(); 
 
-				int pTregen = hRregen[Tbin]->GetRandom(); 
-				float Rregen = hRregen[Tbin]->GetBinContent(hRregen[Tbin]->FindBin(pTregen));
+				float Rregen0_1S = hRregen[Tbin]->GetBinContent(hRregen[Tbin]->FindBin(pTregen));
+				float Rregen1_1S = hRregen[Tbin+1]->GetBinContent(hRregen[Tbin+1]->FindBin(pTregen));
 
-				hpT1S_r->Fill(pTregen, Rregen*dt);
+				float deltaT = (THydro0+THydro1)/2 - (Tbin*10 + 170.0);
+				float Rregen_1S = Rregen0_1S + (Rregen1_1S - Rregen0_1S)*(deltaT*0.1); 
 
-				//cout << (THydro0+THydro1)/2 << " " << Tbin << endl;
+				hpT1S_r->Fill(pTregen, Rregen_1S*dt/const_ratio_Y_b/const_ratio_Y_b);
 
 			}//it
 		}//ib
-		*/
 
 		infileHydro->Close();
 		delete infileHydro;
@@ -1147,9 +1240,9 @@ void CalcRaaV7(){
 		htmp->GetYaxis()->SetLabelSize(0.04);
 		htmp->GetYaxis()->SetTitleSize(0.05);
 
-		hprofRAA1S_Npart_allpT->Rebin();
-		hprofRAA2S_Npart_allpT->Rebin();
-		hprofRAA3S_Npart_allpT->Rebin();
+		//hprofRAA1S_Npart_allpT->Rebin();
+		//hprofRAA2S_Npart_allpT->Rebin();
+		//hprofRAA3S_Npart_allpT->Rebin();
 
 		hprofRAA1S_Npart_allpT->SetLineColor(1);
 		hprofRAA1S_Npart_allpT->SetLineWidth(2);
@@ -1297,50 +1390,50 @@ void CalcRaaV7(){
 		hRAA_pT_all->Draw("p same");
 		*/
 
-		/*
-		hpT1S_i->Rebin(5);
-		hpT1S_f->Rebin(5);
-		hpT1S_r->Rebin(5);
+		if ( bDRAW_Result ){
+			hpT1S_i->Rebin(5);
+			hpT1S_f->Rebin(5);
+			hpT1S_r->Rebin(5);
 
-		TCanvas *c3 = new TCanvas("c3","c3",1.2*500,500);
-		SetPadStyle();
-		gPad->SetTicks();
-		gPad->SetLogy();
-		htmp = (TH1D*)gPad->DrawFrame(0,0.5,20,2*hpT1S_i->GetMaximum());
-		htmp->GetXaxis()->SetTitle("p_{T} (GeV/c)");
-		htmp->GetXaxis()->SetLabelSize(0.04);
-		htmp->GetXaxis()->SetTitleSize(0.05);
-		htmp->GetYaxis()->SetTitle("N");
-		htmp->GetYaxis()->SetLabelSize(0.04);
-		htmp->GetYaxis()->SetTitleSize(0.05);
+			TCanvas *c3 = new TCanvas("c3","c3",1.2*500,500);
+			SetPadStyle();
+			gPad->SetTicks();
+			gPad->SetLogy();
+			htmp = (TH1D*)gPad->DrawFrame(0,0.5,20,2*hpT1S_i->GetMaximum());
+			htmp->GetXaxis()->SetTitle("p_{T} (GeV/c)");
+			htmp->GetXaxis()->SetLabelSize(0.04);
+			htmp->GetXaxis()->SetTitleSize(0.05);
+			htmp->GetYaxis()->SetTitle("N");
+			htmp->GetYaxis()->SetLabelSize(0.04);
+			htmp->GetYaxis()->SetTitleSize(0.05);
 
-		hpT1S_i->SetMarkerStyle(20);
-		hpT1S_i->SetMarkerColor(1);
-		hpT1S_i->SetLineColor(1);
-		hpT1S_i->Draw("p same");
+			hpT1S_i->SetMarkerStyle(20);
+			hpT1S_i->SetMarkerColor(1);
+			hpT1S_i->SetLineColor(1);
+			hpT1S_i->Draw("p same");
 
-		hpT1S_f->SetMarkerStyle(24);
-		hpT1S_f->SetMarkerColor(1);
-		hpT1S_f->SetLineColor(1);
-		hpT1S_f->Draw("p same");
+			hpT1S_f->SetMarkerStyle(24);
+			hpT1S_f->SetMarkerColor(1);
+			hpT1S_f->SetLineColor(1);
+			hpT1S_f->Draw("p same");
 
-		hpT1S_r->Scale(9.93*nY_tot/(2e-3));
-		hpT1S_r->SetMarkerStyle(21);
-		hpT1S_r->SetMarkerSize(0.8);
-		hpT1S_r->SetMarkerColor(1);
-		hpT1S_r->SetLineColor(1);
-		hpT1S_r->Draw("p same");
-		
-		cout << hpT1S_i->Integral() << endl;
-		cout << hpT1S_f->Integral() << endl;
-		cout << hpT1S_r->Integral() << endl;
-		*/
+			//hpT1S_r->Scale(9.93*nY_tot/(2e-3));
+			hpT1S_r->SetMarkerStyle(21);
+			hpT1S_r->SetMarkerSize(0.8);
+			hpT1S_r->SetMarkerColor(1);
+			hpT1S_r->SetLineColor(1);
+			hpT1S_r->Draw("p same");
+
+			cout << hpT1S_i->Integral() << endl;
+			cout << hpT1S_f->Integral() << endl;
+			cout << hpT1S_r->Integral() << endl;
+		}
 
 	}
 
 	if ( bSAVE ){
 
-		TFile *outfile = new TFile(Form("outfile_RaaV6_%04d_%04d.root",run_i,run_f),"recreate");
+		TFile *outfile = new TFile(Form("outfile_RaaV7_%04d_%04d.root",run_i,run_f),"recreate");
 
 		hprofRAA1S_Npart->Write();
 		hprofRAA1S_pT->Write();
@@ -1356,6 +1449,10 @@ void CalcRaaV7(){
 			}
 		}
 		hFinalState->Write();
+
+		hpT1S_i->Write();
+		hpT1S_f->Write();
+		hpT1S_r->Write();
 	}
 
 	return;
