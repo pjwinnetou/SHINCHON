@@ -7,7 +7,7 @@ using namespace std;
 
 void FinalDrawRAA_PbPb(){
 
-	const bool bSAVE = true;
+	const bool bSAVE = false;
 
 	gStyle->SetOptStat(0);
 	gStyle->SetPalette(55);
@@ -122,9 +122,10 @@ void FinalDrawRAA_PbPb(){
 		//SetPadStyle();
 
 		TH1D *htmp = (TH1D*)gPad->DrawFrame(0,0,400,1.2);
-		SetHistAxis(htmp,"N_{part}","R_{AA}");
+		htmp->GetXaxis()->SetTitle("N_{part}");
+		htmp->GetYaxis()->SetTitle("R_{AA}");
     htmp->GetYaxis()->SetTitleOffset(1.0);
-    htmp->GetXaxis()->SetTitleOffset(1.1);
+    htmp->GetXaxis()->SetTitleOffset(1.05);
     htmp->GetXaxis()->SetTitleSize(0.055);
     htmp->GetXaxis()->SetLabelSize(0.043);
     htmp->GetYaxis()->SetLabelSize(0.043);
@@ -159,24 +160,24 @@ void FinalDrawRAA_PbPb(){
 		gCMS3->Draw("P");
 
 		gRAA1S_Npart->SetLineWidth(4);
-		gRAA1S_Npart->SetLineStyle(2);
+		gRAA1S_Npart->SetLineStyle(1);
 		gRAA1S_Npart->SetLineColorAlpha(1, 0.3);
 		gRAA1S_Npart->SetFillColorAlpha(1, 0.3);
 		gRAA1S_Npart->Draw("L3");
 
 		gRAA2S_Npart->SetLineWidth(4);
-		gRAA2S_Npart->SetLineStyle(2);
+		gRAA2S_Npart->SetLineStyle(1);
 		gRAA2S_Npart->SetLineColorAlpha(4, 0.3);
 		gRAA2S_Npart->SetFillColorAlpha(4, 0.3);
 		gRAA2S_Npart->Draw("L3");
 
 		gRAA3S_Npart->SetLineWidth(4);
-		gRAA3S_Npart->SetLineStyle(2);
+		gRAA3S_Npart->SetLineStyle(1);
 		gRAA3S_Npart->SetLineColorAlpha(kGreen+2, 0.5);
 		gRAA3S_Npart->SetFillColorAlpha(kGreen+2, 0.5);
 		gRAA3S_Npart->Draw("L3");
 
-		TLegend *leg = new TLegend(0.5,0.6,0.8,0.9);
+		TLegend *leg = new TLegend(0.5,0.6,0.9,0.9);
 		SetLegendStyle(leg);
 		//leg->SetFillStyle(0);
 		//leg->SetBorderSize(0);
@@ -205,9 +206,11 @@ void FinalDrawRAA_PbPb(){
 		//SetPadStyle();
 
 		TH1D *htmp = (TH1D*)gPad->DrawFrame(0,0,400,1.2);
-		SetHistAxis(htmp,"N_{part}","R_{AA}");
+		//SetHistAxis(htmp,"N_{part}","R_{AA}");
+		htmp->GetXaxis()->SetTitle("N_{part}");
+		htmp->GetYaxis()->SetTitle("R_{AA}");
     htmp->GetYaxis()->SetTitleOffset(1.0);
-    htmp->GetXaxis()->SetTitleOffset(1.1);
+    htmp->GetXaxis()->SetTitleOffset(1.05);
     htmp->GetXaxis()->SetTitleSize(0.055);
     htmp->GetXaxis()->SetLabelSize(0.043);
     htmp->GetYaxis()->SetLabelSize(0.043);
@@ -223,24 +226,24 @@ void FinalDrawRAA_PbPb(){
 		gCMS3->Draw("P");
 
 		gRAA1S_Npart_c->SetLineWidth(4);
-		gRAA1S_Npart_c->SetLineStyle(2);
+		gRAA1S_Npart_c->SetLineStyle(1);
 		gRAA1S_Npart_c->SetLineColorAlpha(1, 0.3);
 		gRAA1S_Npart_c->SetFillColorAlpha(1, 0.3);
 		gRAA1S_Npart_c->Draw("L3");
 
 		gRAA2S_Npart_c->SetLineWidth(4);
-		gRAA2S_Npart_c->SetLineStyle(2);
+		gRAA2S_Npart_c->SetLineStyle(1);
 		gRAA2S_Npart_c->SetLineColorAlpha(4, 0.3);
 		gRAA2S_Npart_c->SetFillColorAlpha(4, 0.3);
 		gRAA2S_Npart_c->Draw("L3");
 
 		gRAA3S_Npart_c->SetLineWidth(4);
-		gRAA3S_Npart_c->SetLineStyle(2);
+		gRAA3S_Npart_c->SetLineStyle(1);
 		gRAA3S_Npart_c->SetLineColorAlpha(kGreen+2, 0.5);
 		gRAA3S_Npart_c->SetFillColorAlpha(kGreen+2, 0.5);
 		gRAA3S_Npart_c->Draw("L3");
 
-		TLegend *leg1 = new TLegend(0.5,0.6,0.8,0.9);
+		TLegend *leg1 = new TLegend(0.5,0.6,0.9,0.9);
 		SetLegendStyle(leg1);
 		//leg1->SetFillStyle(0);
 		//leg1->SetBorderSize(0);
