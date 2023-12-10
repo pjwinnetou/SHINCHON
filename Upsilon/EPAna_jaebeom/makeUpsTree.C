@@ -18,12 +18,14 @@
 #include <TProfile2D.h>
 #include <TF2.h>
 #include <TLorentzVector.h>
+#include "Math/Integrator.h"
+#include "Math/Functor.h"
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <dirent.h>
-//#include <memory>
+#include <memory>
 #include <cstddef>
 
 using namespace std;
@@ -51,38 +53,42 @@ Double_t fTsallis_v2(Double_t *x, Double_t *fpar){
   return f;
 }
 
-void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
+void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
 
 
   gStyle->SetOptStat(0);
   gStyle->SetPalette(55);
 
   gRandom = new TRandom3(0);
+  ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-6); //to converge
 
   const bool bDRAW = false; 
   const bool bSAVE = true; 
   const bool b2D = false;
-
-  const bool bPreQGP = false;
-  const bool bPreRES = false; //false;
+  const bool bPreQGP = true;
+  const bool bPreRES = false;
 
   const float PreHydroTempRatio = 1.20;
 
+  const int run_i = runId;
+  const int run_f = runId+10;
+  const int nrun = 10;
+
+/*
   const int run_i = 0;
   const int run_f = 1000;
   const int nrun = (run_f-run_i);
+*/
   const float const_hbarc = 197.5; //MeV fm
-
   const int nstates = 3;
 
   const float const_mY[nstates] = {
 	9.46 ,10.02, 10.36 }; //GeV
   const float const_tau0Y[nstates] = {
-	0.5, 1.0, 1.5 }; //fm/c  20% increase than default
+	0.5, 1.0, 1.5 }; //fm/c
+//  0.3, 0.6, 0.9 };
   const float const_TmaxY[nstates] = {
 	600.0, 240.0, 190.0}; //MeV
-//	600.0, 360.0, 300.0}; //MeV
-
 
   const int nSAMP = 100; //times Ncoll
 
@@ -98,7 +104,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 
   float f_tmp[20];
 
-  fdata.open("/alice/data/junleekim/SHINCHON/DissConst//Gdiss0.dat");
+  fdata.open("/alice/data/junleekim/SHINCHON/DissConst/Gdiss0.dat");
   fdata.getline(buf,500);
 
   while ( fdata 
@@ -158,7 +164,6 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   ){
     for (int ipt=0; ipt<11; ipt++){
       if ( f_tmp[ipt+1]>0 ){
-	cout << f_tmp[0] << endl;
 	T[ipt].push_back(f_tmp[0]);
 	Gdiss[ipt].push_back(f_tmp[ipt+1]);
       }
@@ -296,16 +301,20 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   else if(GlbFileName.find("dAu") != string::npos){nNucl_proj=2; nNucl_targ=197;}
   else if(GlbFileName.find("OO") != string::npos){nNucl_proj=16; nNucl_targ=16;}
   else if(GlbFileName.find("pO") != string::npos){nNucl_proj=1; nNucl_targ=16;}
+  else if(GlbFileName.find("pp") != string::npos){nNucl_proj=1; nNucl_targ=1;}
 
   TFile* infileGlauber;
   if( ( Collision_system.find("pPb") != string::npos || 
 	Collision_system.find("pO")  != string::npos ||
-	Collision_system.find("OO")  != string::npos) && 
+	Collision_system.find("OO")  != string::npos ||
+	Collision_system.find("pp")  != string::npos ) && 
     Collision_system.find("trento") == string::npos){
     infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-8160GeV-b0-10fm.root",Collision_system.c_str()),"read"); 
   } else if( Collision_system.find("trento") != string::npos ){
     string collname = Collision_system.substr( 0, Collision_system.find("_"));
     infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-8160GeV-b0-10fm.root",collname.c_str()),"read");
+  } else if( Collision_system.find("AuAu")  != string::npos ){ 
+    infileGlauber = new TFile(Form("/alice/data/junleekim/SHINCHON/MCGlauber/MCGlauber-%s-200GeV-b0-18fm.root",Collision_system.c_str()),"read");
   } else{
     infileGlauber = new TFile(Form("../%s",GlbFileName.c_str()),"read");
   }
@@ -332,8 +341,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   TH2D *hTHydro[1000];
   TGraphErrors *gTHydro[nrun];
   TF1 *fT2[nrun];
-  double timeHydro[nrun][3000] = {0.0}; 
-  float errTHydro[nrun][3000] = {0.0};
+  double timeHydro[nrun][1000] = {0.0}; 
+  float errTHydro[nrun][1000] = {0.0};
   float freezeT[nrun];
 
   TProfile *hprofRAA_Npart = new TProfile("hprofRAA_Npart","",40,0,400);
@@ -345,23 +354,14 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   TProfile *hprofRAA_pT_rl[nstates];
 
   TGraphErrors* gGdiss[nstates][100];
-  TF1* fGdiss[nstates][100];
-
   for(int i=0;i<21;i++){
     gGdiss[0][i] = (TGraphErrors*)gGdiss1S[i]->Clone();
-    fGdiss[0][i] = (TF1*)fGdiss1S[i]->Clone();
   }
   for(int i=0;i<11;i++){
-    if( gGdiss2S[i]->GetN() ){
-	gGdiss[1][i] = (TGraphErrors*)gGdiss2S[i]->Clone();
-	fGdiss[1][i] = (TF1*)fGdiss2S[i]->Clone();
-    }
+    if( gGdiss2S[i]->GetN() ) gGdiss[1][i] = (TGraphErrors*)gGdiss2S[i]->Clone();
   }
   for(int i=0;i<2;i++){
-    if( gGdiss3S[i]->GetN() ){
-	gGdiss[2][i] = (TGraphErrors*)gGdiss3S[i]->Clone();
-	fGdiss[2][i] = (TF1*)fGdiss3S[i]->Clone();
-    }
+    if( gGdiss3S[i]->GetN() ) gGdiss[2][i] = (TGraphErrors*)gGdiss3S[i]->Clone();
   }
 
   TF1 *fP[nstates];
@@ -371,7 +371,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 
   for(int s=0;s<nstates;s++){
     hprofRAA_Npart_rl[s] 	= new TProfile(Form("hprofRAA_Npart_rl_%dS",s+1),"",40,0,400);
-    hprofRAA_mult_rl[s] 	= new TProfile(Form("hprofRAA_mult_rl_%dS",s+1),"",150,0,150);
+    hprofRAA_mult_rl[s] 	= new TProfile(Form("hprofRAA_mult_rl_%dS",s+1),"",1500,0,150);
     hprofRAA_multST_rl[s] 	= new TProfile(Form("hprofRAA_multST_rl_%dS",s+1),"",40,0,40);
     hprofRAA_pT_rl[s] 		= new TProfile(Form("hprofRAA_pT_rl_%dS",s+1),"",100,0,20);
   }
@@ -414,7 +414,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   TFile *outfile = new TFile(Form("./outfile_UpsSkim_PhiAng_%s_%.f_%s_%04d_%04d.root",Collision_system.c_str(),phiN_,fInitPos.c_str(),run_i,run_f),"recreate");
 
   static const long MAXTREESIZE = 1000000000;
- static const long MaxUpsSize = 100000;
+  static const long MaxUpsSize = 200000;
 
   int runid;
   int nUps;
@@ -428,14 +428,13 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   double EPangEnProf, EPangGlauber, EPangGlauberh;
   int Npart_;
   int Ncoll_;
-  int state_;
   float b_;
   float eccgaus_[Necc];
   float eccpoint_[Necc];
 
 
   TTree *tree = new TTree("tree","Upsilon Tree");
-  //tree->SetMaxTreeSize(MAXTREESIZE);
+  tree->SetMaxTreeSize(MAXTREESIZE);
   tree->Branch("run",&runid,"run/I");
   tree->Branch("nUps",&nUps,"nUps/I");
   tree->Branch("Ups4momRaw", "TClonesArray", &Ups4momRaw, 32000, 0);
@@ -449,7 +448,6 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   tree->Branch("vy0",vy0_,"vy0[nUps]/D");
   tree->Branch("Npart",&Npart_,"Npart/I");
   tree->Branch("Ncoll",&Ncoll_,"Ncoll/I");
-  tree->Branch("UpsState",&state_,"UpsState/I");
   tree->Branch("b",&b_,"Ncoll/F");
   tree->Branch("eccgaus",eccgaus_,Form("eccgaus[%d]/F",Necc));
   tree->Branch("eccpoint",eccpoint_,Form("eccpoint[%d]/F",Necc));
@@ -462,8 +460,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   TF2* smearing_function = new TF2("smear_tf2", "TMath::Exp(-(x*x+y*y)/(2.*[0]*[0]))/(2*TMath::Pi()*[0]*[0])", -100*sigs, 100*sigs, -100*sigs, 100*sigs);
   smearing_function->FixParameter(0,sigs);
 
-  //const Double_t max_x = 10.0;
-  //const int nSliceGlb = 300;
+  const Double_t max_x = 10.0;
+  const int nSliceGlb = 300;
   TH2D* hist_glauber_fine[nrun];
 
   float meanX = 0, meanY = 0;
@@ -474,15 +472,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
   float varXw, varYw, varXYw;
   double sTsq, sT;
 
-
-  TFile* fCentrality = new TFile("/alice/data/junleekim/SHINCHON/mult/outfile_Centrality_pPb_pO_OO_8TeV.root","read");
-  TH1D* hCentrality = (TH1D*)fCentrality->Get(Form("hCent_%s",Collision_system.c_str()));
-
-  bool IsSelectedCent = true;
   for (int irun=run_i; irun<run_f; irun++){
-
-    IsSelectedCent = true;
-    if( hCentrality->GetBinContent( irun+1 ) > 90 ) IsSelectedCent = false;
+    gRandom->SetSeed( irun );
 
     hMult = (TH1D*)fMultOut->Get(Form("hMultDist_%d_0",irun));
 
@@ -504,12 +495,15 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
     TFile* infileHydro;
     if( Collision_system.find("pPb") != string::npos || 
 	Collision_system.find("pO")  != string::npos ||
-	Collision_system.find("OO")  != string::npos ){
-//      infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_8160GeV/superSONIC_profile_%s_8160GeV_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
-	infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_8160GeV_fine/superSONIC_profile_%s_8160GeV_fine_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
+	Collision_system.find("OO")  != string::npos ||
+	Collision_system.find("pp")  != string::npos ){
+
+      infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_8160GeV_fine/superSONIC_profile_%s_8160GeV_fine_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
+    } else if( Collision_system.find("AuAu") != string::npos ){
+	  infileHydro = new TFile(Form("/alice/data/junleekim/SHINCHON/superSONIC_profile_%s_200GeV_fine/superSONIC_profile_%s_200GeV_fine_event%05d.root",Collision_system.c_str(),Collision_system.c_str(),irun),"read");
     } else{
 
-    }
+	}
     TH1D *htimeHydro = (TH1D*)infileHydro->Get("Time");
     int ntimeHydro = (int)htimeHydro->GetEntries();
 
@@ -521,9 +515,6 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
     for(int iecc=0;iecc<Necc;iecc++){eccgaus_[iecc] = eccgaus[iecc]; eccpoint_[iecc] = eccpoint[iecc];}
     TH2D* hGlauber = (TH2D*)infileGlauber->Get(Form("inited_event%d",irun));
 
-    const Double_t max_x = hGlauber->GetXaxis()->GetXmax();
-    const int nSliceGlb = hGlauber->GetNbinsX();
-
     ifstream fGlauber;
     if( Collision_system.find("trento") == string::npos ){
       if( Collision_system.find("pPb") != string::npos ){
@@ -532,7 +523,11 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 	fGlauber.open(Form("/alice/data/junleekim/SHINCHON/initedFiles_pO_8160GeV_b0_10fm/event%d_9998.dat",irun));
       } else if( Collision_system.find("OO") != string::npos ){
 	fGlauber.open(Form("/alice/data/junleekim/SHINCHON/initedFiles_OO_8160GeV_b0_10fm/event%d_9997.dat",irun));
-      }
+      } else if( Collision_system.find("pp") != string::npos ){
+	fGlauber.open(Form("/alice/data/junleekim/SHINCHON/initedFiles_pp_8160GeV_b0_5fm/event%d_9996.dat",irun));
+      } else if( Collision_system.find("AuAu") != string::npos ){
+	fGlauber.open(Form("/alice/data/junleekim/SHINCHON/initedFiles_AuAu_200GeV_b0_18fm/event%d_9995.dat",irun));
+	  }
     } else if( Collision_system.find("trento") != string::npos ){
       if( Collision_system.find("pPb") != string::npos ){
 	if( Collision_system.find("p0") != string::npos ){
@@ -556,7 +551,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
     }
     fGlauber.close();
     
-
+	// sT calculations
     meanX = 0.0;
     meanY = 0.0;
     meanX2 = 0.0;
@@ -566,7 +561,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 
     for(int x=0;x<hGlauber->GetNbinsX();x++){
       for(int y=0;y<hGlauber->GetNbinsY();y++){
-	float xx = hGlauber->GetXaxis()->GetBinCenter( x+1 );
+		float xx = hGlauber->GetXaxis()->GetBinCenter( x+1 );
         float yy = hGlauber->GetYaxis()->GetBinCenter( y+1 );
         float ww = hGlauber->GetBinContent( x+1, y+1 );
 
@@ -621,8 +616,6 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
     }
     EPangEnProf = 1./phiN_ * TMath::ATan(sumSinEnProf/sumCosEnProf);
 
-
-
     //EP angle from Glauber 
     hist_glauber_fine[irun-run_i] = new TH2D(Form("hist_glauber_fineBins_irun%d",irun),";x;y",nSliceGlb, -max_x, max_x, nSliceGlb, -max_x, max_x);
     double sumSinGlb = 0; double sumCosGlb=0;
@@ -634,19 +627,15 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
         double yval_ = -max_x + max_x/nSliceGlb + 2*max_x/nSliceGlb*isly;
         long double content=0;
 
-	for(int in=0; in<nNucl; in++){
+        for(int in=0; in<nNucl; in++){
           if(wproj[in]==0) continue;
           if(in >= nNucl_proj) continue;
-	  if(xproj[in] > max_x || xproj[in] < -1*max_x) continue;
-	  if(yproj[in] > max_x || yproj[in] < -1*max_x) continue;
           content += smearing_function->Eval(xproj[in] - xval_, yproj[in] - yval_);
         }
 
         for(int in=0; in<nNucl; in++){
           if(wtarg[in]==0) continue;
           if(in >= nNucl_targ) continue;
-	  if(xtarg[in] > max_x || xtarg[in] <-1*max_x) continue;
-          if(ytarg[in] > max_x || ytarg[in] <-1*max_x) continue;
           content += smearing_function->Eval(xtarg[in] - xval_, ytarg[in] - yval_);
         }
 
@@ -687,40 +676,30 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
     }
     EPangGlauberh = 1./phiN_ * TMath::ATan(sumSinGlbh/sumCosGlbh);
 
+/*
     cout << "EP Angle (Energy density profile) : " << EPangEnProf << endl;
     cout << "EP Angle (Glauber fine bins) : " << EPangGlauber << endl;
     cout << "EP Angle (Glauber hist) : " << EPangGlauberh << endl;
-
+*/
     
-    //Upsilon-----------------------------------------------------------------------------------------
-   
+    //Upsilon
     const int nY = nSAMP * Gncoll;
     cout << "nY : " << nY << endl;
     cout << endl;
 
-  
     for(int s=0;s<nstates;s++){
-      state_ = s+1;
       for (int iY=0; iY<nY; iY++){
         //Momentum
-	fInitialUpsilon->SetParameters(  1.06450e+00 ,  7.97649e-01 , 100, const_mY[s] );
-	ROOT::Math::IntegratorOneDimOptions::SetDefaultRelTolerance(1.E-6); //to converge
+		fInitialUpsilon->SetParameters( 1.06450e+00 ,  7.97649e-01 , 100, const_mY[s] );
         double pT = fInitialUpsilon->GetRandom();
         double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
         double px = pT*cos(phi);
         double py = pT*sin(phi);
-
-	double rap = 2.5*gRandom->Rndm();
-	rap = 0.0;
         double mT = sqrt(pT*pT + const_mY[s]*const_mY[s]);
-	double pz = mT*sinh(rap);
 
-	int pTbin = int(pT);
-      	if ( pT>=20 ) continue;
-        //cout << "state: " << state_ << "  pT: " << pT << "    Fraction: " <<  fdFraction->Eval(pT)  << "  test: " << gRandom->Rndm()<< endl;
-//        if( gRandom->Rndm()*100 < fdFraction->Eval(pT) ) continue; //feeddown rejection
-	if( s>0 ) pTbin = int(pT/2);
-
+		int pTbin = int(pT);
+		if ( pT>=20 ) continue;
+		if( s>0 ) pTbin = int(pT/2);
 
       	//Beta
       	double bx = fP[s]->GetX(fabs(px)); 
@@ -741,8 +720,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
       	}
 
       	TLorentzVector lvec;
-//      	lvec.SetPxPyPzE(px, py, 0, mT);
-	lvec.SetPxPyPzE(px, py, pz, sqrt(const_mY[s]*const_mY[s] + pT*pT + pz*pz));
+      	lvec.SetPxPyPzE(px, py, 0, mT);
+
       	double tau_form = const_tau0Y[s]*lvec.Gamma();
 
       	double vx0 = vx;
@@ -750,18 +729,16 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 
       	double modF = 1.0;
       	int nFO = 0;
-
       	double det_flg = 1.0;
 
       	//Pre-Hydro 
       	if( bPreQGP && s==0 ){
           float TPre = PreHydroTempRatio*hTHydro[0]->GetBinContent(hTHydro[0]->FindBin(vx, vy))*1000.;
           if( TPre>Tf && tau_form<0.3 ){
-            float GdissPre0 = fGdiss[s][pTbin]->Eval(TPre);
-            float GdissPre1 = fGdiss[s][pTbin+1]->Eval(TPre);
+            float GdissPre0 = gGdiss[s][pTbin]->Eval(TPre);
+            float GdissPre1 = gGdiss[s][pTbin+1]->Eval(TPre);
             float GdissPre = GdissPre0 + (GdissPre1 - GdissPre0)*(pT - pTbin);
-
-	    float dt = 0.3 - tau_form;
+			float dt = 0.3 - tau_form;
             modF = exp(-(dt)*GdissPre/const_hbarc);
             if( exp(-(dt)*GdissPre/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
           } else{
@@ -773,43 +750,30 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
       	vx += bx*0.3;
       	vy += by*0.3;
 
+
       	//Time evolution
       	double totTime =0;
       	for (int it=0; it<ntimeHydro-1; it++){
-
           if ( nFO>=5 ) break;
 
           float dt = timeHydro[irun-run_i][it+1] - timeHydro[irun-run_i][it];
           float dx = bx*dt;
           float dy = by*dt;
 
+		  if ( !bPreRES && timeHydro[irun-run_i][it]<tau_form ){
+			vx += dx;
+			vy += dy;
+			continue;
+		  }
 
           float THydro0 = hTHydro[it]->GetBinContent(hTHydro[it]->FindBin(vx, vy))*1000.;
           float THydro1 = hTHydro[it+1]->GetBinContent(hTHydro[it+1]->FindBin(vx+dx, vy+dy))*1000.;
 
-          float Gdiss0, Gdiss1, Gdiss, GdissRef;
-
-	  if( s>0 ) pTbin = int(pT/2);
-	  
-          if( s!=2 ){
-            Gdiss0 = fGdiss[s][pTbin]->Eval((THydro0+THydro1)/2);
-            Gdiss1 = fGdiss[s][pTbin+1]->Eval((THydro0+THydro1)/2);
-            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*(double)(s+1) ) / (1.+s);  // for 1s and 2s
-          } else if( s==2 ){
-            GdissRef = fGdiss3S[0]->Eval((THydro0+THydro1)/2);
-            Gdiss0 = GdissRef*(fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
-            Gdiss1 = GdissRef*(fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
-            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*2.)/2.0;
-          }
-
-/*
-	  if( s==1 ){
-	     pTbin = (int)pT;
-	     Gdiss0 = fGdiss2S[0]->Eval((THydro0+THydro1)/2) * fGdiss[0][pTbin]->Eval((THydro0+THydro1)/2) / fGdiss[0][0]->Eval((THydro0+THydro1)/2);
-	     Gdiss1 = fGdiss2S[0]->Eval((THydro0+THydro1)/2) * fGdiss[0][pTbin+1]->Eval((THydro0+THydro1)/2) / fGdiss[0][0]->Eval((THydro0+THydro1)/2);
-	     Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*(double)(1.) ) / (1.);
-	  }
-*/
+		  if ( (THydro0+THydro1)/2>const_TmaxY[s] ){
+			modF = 0.0;
+			det_flg = 0.0;
+			break;
+		  }
 
           if ( (THydro0+THydro1)/2<Tf ){
             vx += dx;
@@ -819,38 +783,32 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
             continue;
           }
 
-	  if( timeHydro[irun-run_i][it]<tau_form ){
-	    if( bPreRES ){
-/*
-		pTbin = int(pT);
-		Gdiss0 = fGdiss[0][pTbin]->Eval((THydro0+THydro1)/2);
-		Gdiss1 = fGdiss[0][pTbin+1]->Eval((THydro0+THydro1)/2);
-		Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - (double)pTbin*(double)(1.) ) / (1.);
-*/
-	      Gdiss *= timeHydro[irun-run_i][it]/tau_form;
-	    } else {
-	      vx += dx;
-	      vy += dy;
-	      continue;
-	    }
-	  } else {
-	    if ( (THydro0+THydro1)/2>const_TmaxY[s] ){
-              modF = 0.0;  
-              det_flg = 0.0;
-              break;
-	    }
-	  }
+		  float Gdiss0, Gdiss1, Gdiss, GdissRef;
+
+		  if( s!=2 ){
+            Gdiss0 = gGdiss[s][pTbin]->Eval((THydro0+THydro1)/2);
+            Gdiss1 = gGdiss[s][pTbin+1]->Eval((THydro0+THydro1)/2);
+            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin*(s+1) );  // for 1s and 2s
+		  } else if( s==2 ){
+			GdissRef = fGdiss3S[0]->Eval((THydro0+THydro1)/2);
+            Gdiss0 = GdissRef*(fGdiss2S[pTbin]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
+            Gdiss1 = GdissRef*(fGdiss2S[pTbin+1]->Eval((THydro0+THydro1)/2))/(fGdiss2S[0]->Eval((THydro0+THydro1)/2));
+            Gdiss = Gdiss0 + (Gdiss1 - Gdiss0)*(pT - pTbin*2)/2.0;
+		  }
+
+		  if( bPreRES && timeHydro[irun-run_i][it]<tau_form ){
+			Gdiss *= timeHydro[irun-run_i][it]/tau_form;
+		  }
 
           modF *= exp(-(dt)*Gdiss/const_hbarc);
-          if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ){
-	    det_flg = 0.0; break;
-	  }
+          if( exp(-(dt)*Gdiss/const_hbarc) < gRandom->Rndm() ) det_flg = 0.0;
+
           vx += dx;
           vy += dy;
           totTime += dt;
 
         }//it
-
+/*
       	double velfx = (vx-vx0)/totTime;
       	double velfy = (vy-vy0)/totTime;
       	double pxf = getMom(velfx,const_mY[s]);
@@ -864,7 +822,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 
       	double vxf = vxf_ + vx0;
       	double vyf = vyf_ + vy0;
-
+*/
 /*
       	if( abs(px-pxf) > 1e-5 || abs(py-pyf) > 1e-5){
           cout << "Inconsistent momentum diff > 1e-5 GeV/c" << endl;
@@ -879,10 +837,8 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
 */
 
       	hprofRAA_Npart_rl[s]->Fill( Npart_, det_flg );
-	if( IsSelectedCent ){
-      	  hprofRAA_mult_rl[s]->Fill( hMult->GetMean(), det_flg );
-      	  hprofRAA_multST_rl[s]->Fill( hMult->GetMean()/sT, det_flg );
-	}
+      	hprofRAA_mult_rl[s]->Fill( hMult->GetMean(), det_flg );
+      	hprofRAA_multST_rl[s]->Fill( hMult->GetMean()/sT, det_flg );
       	hprofRAA_pT_rl[s]->Fill( pT, det_flg );
 
       	if ( b2D ){
@@ -893,7 +849,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
       	}
       
       	//Fill Upsilon position
-
+/*
       	double fphiAng;
       	if(pxf==0) fphiAng = 0;
       	else if(pxf>0 && pyf>=0) fphiAng = TMath::ATan(abs(pyf/pxf));
@@ -905,7 +861,7 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
       	hphi_finalMom[s]->Fill(fphiAng);
 
       
-     /* if( abs((fphiAng-fphiAng_)/fphiAng*100)>15){
+      if( abs((fphiAng-fphiAng_)/fphiAng*100)>15){
       cout << "-----COMP START----" << endl;
       cout << "Upsilon : " << iY << " (px,py), (vx,vy) : " << pxf << ", " << pyf << " -- " << vx << ", " << vy << endl;
       cout << "fphiAng(px,py), fphiAng(vx,vy) : " << fphiAng << ", " << fphiAng_ << endl;
@@ -930,14 +886,13 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
       }
       */
 
-
+/*
       	TLorentzVector* Ups4VRaw = new TLorentzVector;
       	TLorentzVector* Ups4VEnProfCor = new TLorentzVector;
       	TLorentzVector* Ups4VGlauberCor = new TLorentzVector;
       	Ups4VRaw->SetPtEtaPhiM(pT,0,phi,const_mY[s]);
       	Ups4VEnProfCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangEnProf, Ups4VRaw->M());
       	Ups4VGlauberCor->SetPtEtaPhiM(Ups4VRaw->Pt(), Ups4VRaw->Eta(), Ups4VRaw->Phi()-EPangGlauber, Ups4VRaw->M());
-	//cout << Ups4VRaw->Pt()<< " " <<  Ups4VRaw->Eta() << "  " <<  Ups4VRaw->Phi() << " " << EPangGlauber << " " <<  Ups4VRaw->M() << endl;
       	new((*Ups4momRaw)[nUps])TLorentzVector(*Ups4VRaw);
       	new((*Ups4momEnProfCor)[nUps])TLorentzVector(*Ups4VEnProfCor);
       	new((*Ups4momGlauberCor)[nUps])TLorentzVector(*Ups4VGlauberCor);
@@ -947,18 +902,19 @@ void makeUpsTree( string Collision_system = "pPb", int kInitPos = 1 ){
       	IsUpsSurv_modf[nUps] = modF;
       	IsUpsSurv_prob[nUps] = det_flg;
       	nUps++;
-
+*/
       }//iY
-	tree->Fill();
-    } //s
+    }
     
     infileHydro->Close();
     delete infileHydro;
 
-    //tree->Fill();
+    tree->Fill();
 
     outfile->cd();
-    hTempEnergy[irun-run_i]->Write();
+    if ( b2D ){
+      hTempEnergy[irun-run_i]->Write();
+    }
   }
 
 
