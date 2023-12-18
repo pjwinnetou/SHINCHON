@@ -1,0 +1,16 @@
+1. Compile and install trento using the source file trento-master.zip
+official instruction: http://qcd.phy.duke.edu/trento/installation.html
+
+2. Generate events
+Example configuration files are in "config" directory
+$> $(TRENTO_INSTALL_DIR)/bin/trento -c conf_pAu.conf
+
+This will generate text files of the 2D profile
+
+3. Convert Trento text files to histograms
+config/Convert2D.C
+
+4. Generate SONIC input text files with a scale factor
+Note: If there are tuned initial 2D profile from MC-Glauber, 
+	a scale factor can be calculated by comparing mean value of
+	integral of 2D profiles, tuned MC-Glauber and untuned Trento
