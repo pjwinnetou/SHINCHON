@@ -53,9 +53,15 @@ Double_t fTsallis_v2(Double_t *x, Double_t *fpar){
   return f;
 }
 
-void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
+Double_t fInitPtAuAu(Double_t *x, Double_t *fpar){
+  Double_t c = fpar[0];
+  Double_t s = fpar[1];
+  Float_t xx = x[0];
 
+  return c*xx / (TMath::Exp(xx/s) + 1.);
+} //arXiv:2207.06568
 
+void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0, int studyBIT=0, float tform=0.5){
   gStyle->SetOptStat(0);
   gStyle->SetPalette(55);
 
@@ -66,14 +72,14 @@ void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
   const bool bSAVE = true; 
   const bool b2D = false;
   const bool bPreQGP = true;
-  const bool bPreRES = false;
+  bool bPreRES = false;
+  if( studyBIT&2 ) bPreRES = true;
 
   const float PreHydroTempRatio = 1.20;
 
   const int run_i = runId;
   const int run_f = runId+10;
   const int nrun = 10;
-
 /*
   const int run_i = 0;
   const int run_f = 1000;
@@ -84,11 +90,18 @@ void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
 
   const float const_mY[nstates] = {
 	9.46 ,10.02, 10.36 }; //GeV
-  const float const_tau0Y[nstates] = {
+  float const_tau0Y[nstates] = {
 	0.5, 1.0, 1.5 }; //fm/c
-//  0.3, 0.6, 0.9 };
+  if( studyBIT&1 ){
+    for(int i=0;i<nstates;i++){
+		const_tau0Y[i] = tform*(1.+i);
+	}
+  }
+
   const float const_TmaxY[nstates] = {
 	600.0, 240.0, 190.0}; //MeV
+  const float const_slope_forAuAuPt[nstates] = {
+	1.40, 1.51, 1.51 };
 
   const int nSAMP = 100; //times Ncoll
 
@@ -411,7 +424,18 @@ void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
   if(kInitPos==0) fInitPos = "InitPosZero";
   else if(kInitPos==1) fInitPos = "InitPosGlauber";
   else if(kInitPos==2) fInitPos = "InitPosMean";
-  TFile *outfile = new TFile(Form("./outfile_UpsSkim_PhiAng_%s_%.f_%s_%04d_%04d.root",Collision_system.c_str(),phiN_,fInitPos.c_str(),run_i,run_f),"recreate");
+  TFile *outfile;
+
+  string outFileName = "outfile_UpsSkim_";
+  outFileName += Collision_system + "_" + fInitPos + "_" + Form("%04d",run_i) + "_" + Form("%04d",run_f);
+  if( studyBIT&1 )
+    outFileName += Form("_tform%.0fatom",tform*1.e3);
+  if( studyBIT&2 )
+    outFileName += "_PreResOn";
+  if( studyBIT&4 )
+    outFileName += "_CentSel";
+
+  outfile = new TFile(Form("./%s.root",outFileName.c_str()), "recreate");
 
   static const long MAXTREESIZE = 1000000000;
   static const long MaxUpsSize = 200000;
@@ -455,7 +479,11 @@ void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
   //Initial pT distribution from JJS
   TF1 *fInitialUpsilon = new TF1("fInitialUpsilon",fTsallis_v2,0,30,4);
   fInitialUpsilon -> SetParameters(  1.06450e+00 ,  7.97649e-01 , 100, const_mY[0] );
- 
+  if( Collision_system.find("AuAu")  != string::npos ){
+    fInitialUpsilon = new TF1("fInitPtAuAu",fInitPtAuAu, 0, 30, 2);
+    fInitialUpsilon->SetParameters( 0.4, const_slope_forAuAuPt[0] );
+  }
+
   //Glauber smearing function  
   TF2* smearing_function = new TF2("smear_tf2", "TMath::Exp(-(x*x+y*y)/(2.*[0]*[0]))/(2*TMath::Pi()*[0]*[0])", -100*sigs, 100*sigs, -100*sigs, 100*sigs);
   smearing_function->FixParameter(0,sigs);
@@ -474,6 +502,8 @@ void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
 
   for (int irun=run_i; irun<run_f; irun++){
     gRandom->SetSeed( irun );
+
+    if( studyBIT&4 && Npart_<37 ) continue;  //60% selection
 
     hMult = (TH1D*)fMultOut->Get(Form("hMultDist_%d_0",irun));
 
@@ -690,7 +720,12 @@ void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
     for(int s=0;s<nstates;s++){
       for (int iY=0; iY<nY; iY++){
         //Momentum
-		fInitialUpsilon->SetParameters( 1.06450e+00 ,  7.97649e-01 , 100, const_mY[s] );
+	if( Collision_system.find("AuAu") == string::npos ){
+	  fInitialUpsilon->SetParameters( 1.06450e+00 ,  7.97649e-01 , 100, const_mY[s] );
+ 	} else if( Collision_system.find("AuAu")  != string::npos ){
+    	  fInitialUpsilon->SetParameters( 0.4, const_slope_forAuAuPt[s] );
+	}
+
         double pT = fInitialUpsilon->GetRandom();
         double phi = (gRandom->Rndm()-0.5)*TMath::TwoPi(); 
         double px = pT*cos(phi);
@@ -1012,3 +1047,8 @@ void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0){
   }
   return;
 }
+
+
+
+
+
