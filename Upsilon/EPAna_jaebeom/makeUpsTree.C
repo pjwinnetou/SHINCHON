@@ -65,6 +65,27 @@ Double_t fInitPtAuAu(Double_t *x, Double_t *fpar){
   return c*xx / (TMath::Exp(xx/s) + 1.);
 } //arXiv:2207.06568
 
+
+Double_t fInitPtpPbJpsi(Double_t *x, Double_t *par)
+{
+  par[0] = 811582;
+  par[1] = 0.821573;
+  par[2] = 9.68714;
+  par[3] = 3.0969;
+  const double xx = x[0];
+  const double dNdy = par[0];
+  const double T    = par[1];
+  const double n    = par[2];
+  const double m0   = par[3];
+
+  const double mT   = std::sqrt(xx*xx + m0*m0);
+
+  const double A = dNdy * (n-1.0)*(n-2.0) / ( n*T * (n*T + m0*(n-2.0)) );
+
+  const double core = 1.0 + (mT - m0)/(n*T);
+  return xx * A * std::pow(core, -n);
+}
+
 void makeUpsTree( string Collision_system, int kInitPos = 1, int runId=0, int studyBIT=0, float tform=0.5){
   gStyle->SetOptStat(0);
   gStyle->SetPalette(55);
